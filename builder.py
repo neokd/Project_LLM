@@ -3,9 +3,12 @@ import os
 from concurrent.futures import ProcessPoolExecutor,ThreadPoolExecutor, as_completed
 from langchain.docstore.document import Document
 from langchain.document_loaders import PDFMinerLoader, TextLoader
+from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 import torch
+import sqlite3
+from typing import Optional,Iterator, List, Dict
 from chromadb.config import Settings
 from langchain.vectorstores import Chroma
 
@@ -24,11 +27,67 @@ EMBEDDING_MODEL_NAME = "hkunlp/instructor-large"
 # HuggingFace Embedding Model
 HUGGINGFACE_EMBEDDING_MODEL = ''
 
+class SQLiteLoader:
+    """
+        Wrapper to load SQL DB
+    """
+    def __init__(self, db_path: str, *, headers: Optional[Dict] = None):
+        """Initialize with SQLite database file path."""
+        self.db_path = db_path
+        self.headers = headers
+
+    def list_tables(self) -> List[str]:
+        """List all tables in the SQLite database."""
+        try:
+            connection = sqlite3.connect(self.db_path)
+            cursor = connection.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            logging.info(f"Loaded Connection to {cursor}")
+            return [row[0] for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            raise RuntimeError(f"SQLite error: {e}")
+        finally:
+            if connection:
+                connection.close()
+
+    def load(self) -> List[Document]:
+        """Eagerly load the content from all tables."""
+        return list(self.lazy_load())
+
+    def lazy_load(self) -> Iterator[Document]:
+        """Lazily load documents from all tables in the SQLite database."""
+        table_names = self.list_tables()
+        for table_name in table_names:
+            yield from self.load_table(table_name)
+
+    def load_table(self, table_name: str) -> Iterator[Document]:
+        """Load data from a specific table in the SQLite database."""
+        try:
+            connection = sqlite3.connect(self.db_path)
+            cursor = connection.cursor()
+            cursor.execute(f"SELECT * FROM {table_name};")
+            
+            column_names = [description[0] for description in cursor.description]
+            
+            for row in cursor.fetchall():
+                metadata = {"source": self.db_path, "table_name": table_name}
+                page_content = "\n".join([f"{col}: {val}" for col, val in zip(column_names, row)])
+                yield Document(page_content=page_content, metadata=metadata)
+            
+        except sqlite3.Error as e:
+            raise RuntimeError(f"SQLite error: {e}")
+        finally:
+            if connection:
+                connection.close()
+
+
 DOCUMENT_MAP = {
     '.pdf': PDFMinerLoader,
     '.txt': TextLoader,
-}
+    '.db':SQLiteLoader,
+    '.sqlite3':SQLiteLoader
 
+}
 
 def load_single_document(file_path: str) -> Document:
     # Loads a single document from a file path
