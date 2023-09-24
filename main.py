@@ -28,7 +28,7 @@ MODEL_BASENAME = "llama-2-13b-chat.Q5_K_M.gguf"
 MAX_TOKEN_LENGTH = 4096
 
 
-def load_model(device_type:str = "mps",model_id:str = MODEL_ID, model_basename:str = MODEL_BASENAME, LOGGING=logging):
+def load_model(device_type:str = "cpu",model_id:str = MODEL_ID, model_basename:str = MODEL_BASENAME, LOGGING=logging):
     callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
     if model_basename is not None:
         if ".gguf" in model_basename.lower():
@@ -64,7 +64,7 @@ def load_model(device_type:str = "mps",model_id:str = MODEL_ID, model_basename:s
         logging.info(f"Model {model_basename} not found in {model_id}")    
     
 
-def main(device_type:str = "mps"):
+def main(device_type:str = "cpu"):
     logging.info(f"Running on : {device_type}")
 
     if not os.path.exists(PERSIST_DIRECTORY):

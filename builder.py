@@ -159,7 +159,7 @@ def builder():
     logging.info(f"Split into {len(texts)} chunks of text")
 
 
-    device_type = "cuda" if torch.cuda.is_available() else "mps"
+    device_type = "cuda" if torch.cuda.is_available() else "cpu"
 
     logging.info(f"Using {device_type} device for embedding model")
 
