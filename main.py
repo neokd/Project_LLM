@@ -10,6 +10,8 @@ from langchain.callbacks.manager import CallbackManager
 from langchain.vectorstores import Chroma
 from chromadb.config import Settings
 from builder import builder
+from langchain.memory import ConversationBufferWindowMemory
+from langchain.prompts import PromptTemplate
 from huggingface_hub import hf_hub_download
 
 
@@ -68,17 +70,6 @@ def main(device_type:str = "mps"):
     if not os.path.exists(PERSIST_DIRECTORY):
         builder()
         
-
-
-    
-
-
-    
-
-
-
-
-
 
 if __name__ == "__main__":
     logging.basicConfig(
