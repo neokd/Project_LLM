@@ -151,7 +151,7 @@ def load_documents(source_directory : str) -> list[Document]:
 def builder():
     logging.info(f"Loading Documents from {SOURCE_DIRECTORY}")
     documents = load_documents(SOURCE_DIRECTORY)
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=300,chunk_overlap=200)
 
     texts = text_splitter.split_documents(documents)
 

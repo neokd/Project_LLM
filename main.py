@@ -10,7 +10,7 @@ from langchain.callbacks.manager import CallbackManager
 from langchain.vectorstores import Chroma
 from chromadb.config import Settings
 from builder import builder
-from langchain.memory import ConversationBufferWindowMemory
+from langchain.memory import ConversationBufferWindowMemory, ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 from huggingface_hub import hf_hub_download
 
@@ -24,6 +24,7 @@ CHROMA_SETTINGS = Settings(
 N_GPU_LAYERS = 100
 MODEL_ID = "TheBloke/Llama-2-13b-Chat-GGUF"
 MODEL_BASENAME = "llama-2-13b-chat.Q5_K_M.gguf"
+EMBEDDING_MODEL_NAME = "hkunlp/instructor-large"
 # Token Length
 MAX_TOKEN_LENGTH = 4096
 
@@ -61,14 +62,50 @@ def load_model(device_type:str = "cpu",model_id:str = MODEL_ID, model_basename:s
         else:
             logging.info(f"Only .gguf models are supported")
     else:
-        logging.info(f"Model {model_basename} not found in {model_id}")    
-    
+        logging.info(f"Model {model_basename} not found in {model_id}") 
+
+def retrival_qa_pipeline(device_type:str="cpu"):
+    embeddings = HuggingFaceInstructEmbeddings(model_name = EMBEDDING_MODEL_NAME, model_kwargs={"device": device_type})
+    db = Chroma(
+        persist_directory=PERSIST_DIRECTORY,
+        embedding_function=embeddings,
+    )
+    retriever = db.as_retriever()
+
+    system_prompt = """ """
+
+    B_INST, E_INST = "[INST]", "[/INST]"
+    B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n" 
+    SYSTEM_PROMPT = B_SYS + system_prompt + E_SYS
+
+    instruction = """
+            Context: {history} \n {context}
+            User: {question}"""
+
+    prompt_template =  B_INST + SYSTEM_PROMPT + instruction + E_INST
+    prompt = PromptTemplate(input_variables=["history", "context", "question"], template=prompt_template)
+    #memory = ConversationBufferWindowMemory(k=2,input_key = "question" , memory_key = "history")  
+    memory = ConversationBufferMemory(input_key="question", memory_key="history")
+    callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+    llm = load_model(device_type, model_id=MODEL_ID, model_basename=MODEL_BASENAME, LOGGING=logging)
+    qa = RetrievalQA.from_chain_type(
+            llm=llm,
+            chain_type="stuff",  # try other chains types as well. refine, map_reduce, map_rerank
+            retriever=retriever,
+            return_source_documents=True,  # verbose=True,
+            callbacks=callback_manager,
+            chain_type_kwargs={"prompt": prompt, "memory": memory},
+    )
+    return qa
 
 def main(device_type:str = "cpu"):
     logging.info(f"Running on : {device_type}")
 
     if not os.path.exists(PERSIST_DIRECTORY):
         builder()
+
+    qa = retrival_qa_pipeline()
+    print(qa("explain user authentication?"))
         
 
 if __name__ == "__main__":
