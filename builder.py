@@ -8,7 +8,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 import torch
 import sqlite3
-from typing import Optional,Iterator, List, Dict
+from typing import Optional, Iterator, List, Dict
 from chromadb.config import Settings
 from langchain.vectorstores import Chroma
 
@@ -148,7 +148,7 @@ def load_documents(source_directory : str) -> list[Document]:
     return docs
 
 
-def main():
+def builder():
     logging.info(f"Loading Documents from {SOURCE_DIRECTORY}")
     documents = load_documents(SOURCE_DIRECTORY)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=200)
@@ -177,7 +177,7 @@ def main():
 
     )
 
-    logging.info("Finished loading documents into database ")
+    logging.info(f"Loaded Documents to Chroma DB Successfully at {PERSIST_DIRECTORY} ")
     
 # def query():
 #     embeddings = HuggingFaceInstructEmbeddings(
@@ -198,6 +198,6 @@ if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)s - %(message)s", level=logging.INFO,
     )
-    main()
+    builder()
 
 
