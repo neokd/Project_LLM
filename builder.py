@@ -27,6 +27,16 @@ EMBEDDING_MODEL_NAME = "hkunlp/instructor-large"
 # HuggingFace Embedding Model
 HUGGINGFACE_EMBEDDING_MODEL = ''
 
+# PYTORCH DEVICE COMPATIBILITY
+if torch.cuda.is_available():
+    DEVICE_TYPE = "cuda"
+elif torch.backends.mps.is_available():
+    DEVICE_TYPE = "mps"
+elif torch.cude.is_rocm_available():
+    DEVICE_TYPE = "rocm"
+else:
+    DEVICE_TYPE = "cpu"
+
 class SQLiteLoader:
     """
         Wrapper to load SQL DB
@@ -151,21 +161,17 @@ def load_documents(source_directory : str) -> list[Document]:
 def builder():
     logging.info(f"Loading Documents from {SOURCE_DIRECTORY}")
     documents = load_documents(SOURCE_DIRECTORY)
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=300,chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=200)
 
     texts = text_splitter.split_documents(documents)
 
     logging.info(f"Loaded {len(documents)} documents from {SOURCE_DIRECTORY}")
     logging.info(f"Split into {len(texts)} chunks of text")
-
-
-    device_type = "cuda" if torch.cuda.is_available() else "cpu"
-
-    logging.info(f"Using {device_type} device for embedding model")
+    logging.info(f"Using {DEVICE_TYPE} device for embedding model")
 
     embeddings = HuggingFaceInstructEmbeddings(
         model_name=EMBEDDING_MODEL_NAME,
-        model_kwargs={"device": device_type},
+        model_kwargs={"device": DEVICE_TYPE},
         cache_folder=os.path.join(os.path.dirname(__file__), "models"),
     )
 
@@ -176,8 +182,7 @@ def builder():
         client_settings=CHROMA_SETTINGS,
 
     )
-
-    logging.info(f"Loaded Documents to Chroma DB Successfully at {PERSIST_DIRECTORY} ")
+    logging.info(f"Loaded Documents to Chroma DB Successfully")
     
 # def query():
 #     embeddings = HuggingFaceInstructEmbeddings(
