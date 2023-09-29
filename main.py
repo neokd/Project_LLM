@@ -11,7 +11,7 @@ from builder import builder
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import PromptTemplate
 from huggingface_hub import hf_hub_download
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM,GenerationConfig
 from config import (
     MODEL_DIRECTORY,
     PERSIST_DIRECTORY,
@@ -56,8 +56,38 @@ def load_model(device_type:str = DEVICE_TYPE,model_id:str = MODEL_ID, model_base
         else:
             LOGGING.info(f"You are trying to load a model that is not a .gguf model")
     else:
-        LOGGING.info(f"Model {model_basename} not found in {model_id}") 
-         
+        LOGGING.info(f"Using HuggingFace Model {model_id}")
+        tokenizer = AutoTokenizer.from_pretrained(model_id, cache_dir="./models/")
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_id,
+            device_map="auto",
+            # torch_dtype=torch.float16,
+            low_cpu_mem_usage=True,
+            cache_dir=MODEL_DIRECTORY,
+            # trust_remote_code=True, # set these if you are using NVIDIA GPU
+            # load_in_4bit=True,
+            # bnb_4bit_quant_type="nf4",
+            # bnb_4bit_compute_dtype=torch.float16,
+            # max_memory={0: "15GB"} # Uncomment this line with you encounter CUDA out of memory errors
+        )
+        model.tie_weights()
+        generation_config = GenerationConfig.from_pretrained(model_id)
+    
+        pipe = pipeline(
+            "text-generation",
+            model=model,
+            tokenizer=tokenizer,
+            max_length=MAX_TOKEN_LENGTH,
+            temperature=0.2,
+            # top_p=0.95,
+            repetition_penalty=1.15,
+            generation_config=generation_config,
+        )
+
+        local_llm = HuggingFacePipeline(pipeline=pipe)
+        logging.info(f"Loaded {model_id} locally")
+        return local_llm
+        
 
 def retrival_qa_pipeline(device_type:str=DEVICE_TYPE):
     embeddings = HuggingFaceInstructEmbeddings(model_name = EMBEDDING_MODEL_NAME, model_kwargs={"device": device_type}, cache_folder=os.path.join(os.path.dirname(__file__), "models"),)
