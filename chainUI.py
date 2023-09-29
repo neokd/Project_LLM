@@ -9,37 +9,22 @@ from langchain.llms import HuggingFacePipeline, LlamaCpp
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler  
 from langchain.callbacks.manager import CallbackManager
 from langchain.vectorstores import Chroma
-from chromadb.config import Settings
 from builder import builder
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import PromptTemplate
 from huggingface_hub import hf_hub_download
 from chainlit.playground.config import add_llm_provider
 from chainlit.playground.providers.langchain import LangchainGenericProvider
-
-
-MODEL_DIRECTORY = os.path.join(os.path.dirname(__file__), "models")
-PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "db")
-CHROMA_SETTINGS = Settings(
-    anonymized_telemetry=False,
-    is_persistent=True,
+from config import (
+    MODEL_DIRECTORY,
+    PERSIST_DIRECTORY,
+    N_GPU_LAYERS,
+    MODEL_ID,
+    MODEL_BASENAME,
+    EMBEDDING_MODEL_NAME,
+    MAX_TOKEN_LENGTH,
+    DEVICE_TYPE
 )
-N_GPU_LAYERS = 100
-MODEL_ID = "TheBloke/Llama-2-7b-Chat-GGUF"
-MODEL_BASENAME = "llama-2-7b-chat.Q5_K_M.gguf"
-EMBEDDING_MODEL_NAME = "hkunlp/instructor-large"
-# Token Length
-MAX_TOKEN_LENGTH = 4096
-
-# PYTORCH DEVICE COMPATIBILITY
-if torch.cuda.is_available():
-    DEVICE_TYPE = "cuda"
-elif torch.backends.mps.is_available():
-    DEVICE_TYPE = "mps"
-elif torch.cude.is_rocm_available():
-    DEVICE_TYPE = "rocm"
-else:
-    DEVICE_TYPE = "cpu"
 
 @cl.cache
 def load_model(device_type:str = DEVICE_TYPE,model_id:str = MODEL_ID, model_basename:str = MODEL_BASENAME, LOGGING=logging):
@@ -76,9 +61,8 @@ def load_model(device_type:str = DEVICE_TYPE,model_id:str = MODEL_ID, model_base
     else:
         logging.info(f"Model {model_basename} not found in {model_id}") 
 
-
+@cl.on_chat_start
 def retrival_qa_pipeline(device_type:str=DEVICE_TYPE):
-    cl.on_chat_start
     embeddings = HuggingFaceInstructEmbeddings(model_name = EMBEDDING_MODEL_NAME, model_kwargs={"device": device_type}, cache_folder=os.path.join(os.path.dirname(__file__), "models"),)
     db = Chroma(
         persist_directory=PERSIST_DIRECTORY,
@@ -108,7 +92,6 @@ def retrival_qa_pipeline(device_type:str=DEVICE_TYPE):
     callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
     llm = load_model(device_type, model_id=MODEL_ID, model_basename=MODEL_BASENAME, LOGGING=logging)
     # Chianlit 
-  
     chain = RetrievalQA.from_chain_type(
             llm=llm,
             chain_type="stuff",  # try other chains types as well. refine, map_reduce, map_rerank

@@ -1,44 +1,27 @@
 # this is the main file for retrival qa bot
-
 import os
 import logging
-import torch
-from langchain.chains import RetrievalQA
+from langchain.chains import RetrievalQA,LLMChain
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.llms import HuggingFacePipeline, LlamaCpp
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler  
 from langchain.callbacks.manager import CallbackManager
 from langchain.vectorstores import Chroma
-from chromadb.config import Settings
 from builder import builder
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import PromptTemplate
 from huggingface_hub import hf_hub_download
-
-
-MODEL_DIRECTORY = os.path.join(os.path.dirname(__file__), "models")
-PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "db")
-CHROMA_SETTINGS = Settings(
-    anonymized_telemetry=False,
-    is_persistent=True,
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from config import (
+    MODEL_DIRECTORY,
+    PERSIST_DIRECTORY,
+    DEVICE_TYPE,
+    N_GPU_LAYERS,
+    MODEL_ID,
+    MODEL_BASENAME,
+    EMBEDDING_MODEL_NAME,
+    MAX_TOKEN_LENGTH,
 )
-N_GPU_LAYERS = 100
-MODEL_ID = "TheBloke/Llama-2-7b-Chat-GGUF"
-MODEL_BASENAME = "llama-2-7b-chat.Q5_K_M.gguf"
-EMBEDDING_MODEL_NAME = "hkunlp/instructor-large"
-# Token Length
-MAX_TOKEN_LENGTH = 4096
-
-# PYTORCH DEVICE COMPATIBILITY
-if torch.cuda.is_available():
-    DEVICE_TYPE = "cuda"
-elif torch.backends.mps.is_available():
-    DEVICE_TYPE = "mps"
-elif torch.cude.is_rocm_available():
-    DEVICE_TYPE = "rocm"
-else:
-    DEVICE_TYPE = "cpu"
-
 
 def load_model(device_type:str = DEVICE_TYPE,model_id:str = MODEL_ID, model_basename:str = MODEL_BASENAME, LOGGING=logging):
     callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
@@ -66,15 +49,15 @@ def load_model(device_type:str = DEVICE_TYPE,model_id:str = MODEL_ID, model_base
                 if device_type.lower() == "cuda":
                     kwargs["n_gpu_layers"] = N_GPU_LAYERS  # set this based on your GPU
                 llm =  LlamaCpp(**kwargs)
-                logging.info(f"Loaded {model_id} locally")
-                return llm 
+                LOGGING.info(f"Loaded {model_id} locally")
+                return llm  # Returns a LlamaCpp object
             except Exception as e:
-                logging.info(f"Error {e}")
+                LOGGING.info(f"Error {e}")
         else:
-            logging.info(f"Only .gguf models are supported")
+            LOGGING.info(f"You are trying to load a model that is not a .gguf model")
     else:
-        logging.info(f"Model {model_basename} not found in {model_id}") 
-
+        LOGGING.info(f"Model {model_basename} not found in {model_id}") 
+         
 
 def retrival_qa_pipeline(device_type:str=DEVICE_TYPE):
     embeddings = HuggingFaceInstructEmbeddings(model_name = EMBEDDING_MODEL_NAME, model_kwargs={"device": device_type}, cache_folder=os.path.join(os.path.dirname(__file__), "models"),)
@@ -87,7 +70,7 @@ def retrival_qa_pipeline(device_type:str=DEVICE_TYPE):
 
     system_prompt = """
         You are a helpful assistant, you will use the provided context to answer user questions.
-        Read the given context before answering questions and think step by step. If you can not answer a user  question based on the provided context, inform the user. Do not use any other information for answering user all output should be in Hindi.
+        Read the given context before answering questions and think step by step. If you can not answer a user  question based on the provided context, inform the user. Do not use any other information for answering user.
     """
 
     B_INST, E_INST = "[INST]", "[/INST]"
@@ -103,14 +86,14 @@ def retrival_qa_pipeline(device_type:str=DEVICE_TYPE):
     prompt = PromptTemplate(input_variables=["history", "context", "question"], template=prompt_template)
     # memory = ConversationBufferMemory(input_key="question", memory_key="history")
     memory = ConversationBufferWindowMemory(k=2,return_messages=True,input_key="question", memory_key="history")
-    callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-    llm = load_model(device_type, model_id=MODEL_ID, model_basename=MODEL_BASENAME, LOGGING=logging,)
+    # callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+    llm = load_model(device_type, model_id=MODEL_ID, model_basename=MODEL_BASENAME, LOGGING=logging)
     chain = RetrievalQA.from_chain_type(
             llm=llm,
             chain_type="stuff",  # try other chains types as well. refine, map_reduce, map_rerank
             retriever=retriever,
             return_source_documents=True,  # verbose=True,
-            callbacks=callback_manager,
+            # callbacks=callback_manager,
             chain_type_kwargs={"prompt": prompt, "memory": memory},
     )
 
@@ -122,7 +105,7 @@ def main(device_type:str = DEVICE_TYPE):
         builder()
     qa = retrival_qa_pipeline()
     while True:
-        query = input("\n \n Enter the query to retrive : ")
+        query = input("\n \n Enter the query to retrive : ") 
         qa(query)
 
 if __name__ == "__main__":

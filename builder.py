@@ -6,36 +6,18 @@ from langchain.document_loaders import PDFMinerLoader, TextLoader
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceInstructEmbeddings
-import torch
 import sqlite3
 from typing import Optional, Iterator, List, Dict
 from chromadb.config import Settings
 from langchain.vectorstores import Chroma
-
-
-# Global Variables
-SOURCE_DIRECTORY = os.path.join(os.path.dirname(__file__), "documents")
-MODEL_DIRECTORY = os.path.join(os.path.dirname(__file__), "models")
-PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "db")
-CHROMA_SETTINGS = Settings(
-    anonymized_telemetry=False,
-    is_persistent=True,
+from config import (
+    SOURCE_DIRECTORY,
+    PERSIST_DIRECTORY,
+    INGEST_THREADS,
+    EMBEDDING_MODEL_NAME,
+    CHROMA_SETTINGS,
+    DEVICE_TYPE
 )
-INGEST_THREADS = os.cpu_count() or 8
-# Embedding Model
-EMBEDDING_MODEL_NAME = "hkunlp/instructor-large"
-# HuggingFace Embedding Model
-HUGGINGFACE_EMBEDDING_MODEL = ''
-
-# PYTORCH DEVICE COMPATIBILITY
-if torch.cuda.is_available():
-    DEVICE_TYPE = "cuda"
-elif torch.backends.mps.is_available():
-    DEVICE_TYPE = "mps"
-elif torch.cude.is_rocm_available():
-    DEVICE_TYPE = "rocm"
-else:
-    DEVICE_TYPE = "cpu"
 
 class SQLiteLoader:
     """
