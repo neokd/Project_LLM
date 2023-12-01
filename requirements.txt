@@ -1,8 +1,0 @@
-chromadb
-torch
-langchain
-pdfminer.six
-instructorembedding
-sentence-transformers
-llama-cpp-python
-chainlit
