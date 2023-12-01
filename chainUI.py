@@ -3,7 +3,7 @@ import os
 import logging
 import torch
 import chainlit as cl
-from langchain.chains import RetrievalQA
+from langchain.chains import RetrievalQA 
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.llms import HuggingFacePipeline, LlamaCpp
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler  
@@ -15,6 +15,7 @@ from langchain.prompts import PromptTemplate
 from huggingface_hub import hf_hub_download
 from chainlit.playground.config import add_llm_provider
 from chainlit.playground.providers.langchain import LangchainGenericProvider
+from gtts import gTTS
 from config import (
     MODEL_DIRECTORY,
     PERSIST_DIRECTORY,
@@ -73,7 +74,7 @@ def retrival_qa_pipeline(device_type:str=DEVICE_TYPE):
 
     system_prompt = """
         You are a helpful assistant, you will use the provided context to answer user questions.
-        Read the given context before answering questions and think step by step. If you can not answer a user  question based on the provided context, inform the user. Do not use any other information for answering user.
+        Read the given context before answering questions and think step by step. If you can not answer a user  question based on the provided context, inform the user. Do not use any other information for answering user.Answer back in respective language the user asked the question in.
     """
 
     B_INST, E_INST = "[INST]", "[/INST]"
@@ -112,9 +113,40 @@ async def main(message: str):
     cb = cl.LangchainCallbackHandler(
         stream_final_answer=True, answer_prefix_tokens=["Assistant"]
     )
+    
 
     cb.answer_reached = True
     res = await cl.make_async(conversation)(message, callbacks=[cb])
+    voice = gTTS(res['result'],slow=False)
+    voice.save("audio.mp3")
+    elements = [
+        cl.Audio(name="audio.mp3", path="./audio.mp3", display="inline"),
+    ]
+    await cl.Message(
+        content="Here is an audio file",
+        elements=elements,
+    ).send()
+
+@cl.on_file_upload(accept=["text/plain"], max_files=3, max_size_mb=2)
+async def upload_file(files: any):
+    """
+    Handle uploaded files.
+
+    Args:
+        files (list): List of uploaded file data.
+
+    Example:
+        [{
+            "name": "example.txt",
+            "content": b"File content as bytes",
+            "type": "text/plain"
+        }]
+    """
+    for file_data in files:
+        file_name = file_data["name"]
+        content = file_data["content"]
+        print(f"Uploaded file: {file_name}\nContent: {content.decode('utf-8')}\n\n")
+        await cl.Message(content=f"Uploaded file: {file_name}\nContent: {content.decode('utf-8')}\n\n").send()
 
 def main_(device_type:str = DEVICE_TYPE):
     logging.info(f"Running on : {device_type}")

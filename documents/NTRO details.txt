@@ -1,0 +1,106 @@
+National Technical Research Organisation (NTRO)
+
+ABOUT:
+
+- The National Technical Research Organisation (NTRO) is a technical intelligence agency of India, established in 2004.
+- It reports to the National Security Advisor and the Prime Minister's Office.
+- NTRO includes the National Critical Information Infrastructure Protection Centre and the National Institute of Cryptology Research and Development.
+- NTRO operates under the same "norms of conduct" as the Intelligence Bureau (IB) and the Research and Analysis Wing (R&AW), as per the Intelligence Organisations (Restriction of Rights) Act, 1985.
+
+Overview:
+
+-Establishment: Founded in 2004.
+-Headquarters: Located in New Delhi, India.
+-Motto: "āno bhadra kṛtavo yantu viśvataḥ" (Let noble thoughts come to me from all directions).
+-Minister Responsible: Narendra Modi, Prime Minister of India.
+-Agency Executive or Director: Arun Sinha, Chairman.
+-Website: "http://ntro.gov.in/"
+
+Mission and Role:
+
+1.Premier Intelligence Agency: NTRO is a premier intelligence agency under the National Security Advisor in the Prime Minister's Office, India.
+2.Technical Wing of RAW: Established as a technical wing of the Research and Analysis Wing (RAW), India's external intelligence agency.
+3.Direct Reporting: Operates under the direct control of the Prime Minister and reports to the National Security Advisor.
+
+Organizational Structure:
+
+1. Premier Intelligence Agency:
+   - NTRO is a premier intelligence agency under the National Security Advisor in the Prime Minister's Office, India.
+
+2. Establishment:
+   - Established in 2004 as a technical wing of the Research and Analysis Wing (RAW), India's external intelligence agency.
+
+3. Reporting Structure:
+   - It operates under the direct control of the Prime Minister and reports to the National Security Advisor.
+
+4. Leadership:
+   - NTRO is headed by a Chairman, currently Arun Sinha, a senior officer with the rank of Secretary to the Government of India.
+
+5. Headquarters:
+   - The organization's headquarters is located in New Delhi, India, with regional offices in various cities across the country.
+
+6. Overseas Stations:
+   - NTRO also maintains overseas stations in some countries for operational purposes.
+
+History:
+
+- Originally known as the National Technical Facilities Organisation (NTFO), NTRO was established as a specialized technical intelligence agency to provide technical intelligence to other agencies on internal and external security.
+- The Subrahmanyam committee report following the Kargil war in 1999 highlighted the need for better intelligence gathering, leading to the formation of NTFO.
+- The Cabinet Committee on Security approved the establishment of NTRO in October 2004, modeled after the United States' National Security Agency (NSA).
+
+Organizational Functions:
+
+- NTRO specializes in multiple disciplines, including remote sensing, SIGINT, data gathering and processing, cyber security, geospatial information gathering, cryptology, and hardware/software development.
+- It also manages the National Critical Information Infrastructure Protection Centre, responsible for monitoring and assessing threats to critical infrastructure.
+- The organization includes the National Institute of Cryptology Research and Development (NICRD).
+- NTRO operates various satellites, including Technology Experiment Satellite (TES), Cartosat-2A, EMISAT, and Cartosat-2B, along with radar imaging satellites RISAT-1 & RISAT-2.
+- Additionally, it operates Very Long Range Tracking Radar (VLRTR) systems for missile monitoring and spaceborne threat detection.
+
+Key Activities:
+
+1.Technical Disciplines: NTRO specializes in various disciplines, including remote sensing, SIGINT, data gathering and processing, cyber security, geospatial information gathering, cryptology, and hardware/software development.
+2.Infrastructure Protection: It manages the National Critical Information Infrastructure Protection Centre, responsible for monitoring and assessing threats to critical infrastructure.
+3.Radar Imaging Satellites: NTRO operates satellites like RISAT-1, RISAT-2, and others for surveillance purposes.
+4.Missile Monitoring: Collaborates with the Indian Air Force (IAF) to operate Very Long Range Tracking Radar (VLRTR) systems for missile monitoring and spaceborne threat detection.
+
+Relationship with Other Agencies:
+
+- In the past, there were delays in implementing key cabinet approvals due to conflicts with the Aviation Research Centre (ARC), a division of the Research and Analysis Wing (R&AW).
+- In 2010, NTRO became the first Indian intelligence agency to be audited by the Comptroller and Auditor General of India (CAG).
+- In 2013, NTRO was accused of hacking into the National Informatics Center (NIC) network by the Department of Electronics and Information Technology (DeitY).
+
+Personnel and Recruitment:
+
+- NTRO's workforce is drawn from various services and organizations, including the Indian Armed Forces, Indian Police Service, Indian Revenue Service, Indian Telecom Service, Indian Engineering Service, Defence Research and Development Organisation (DRDO), and Indian Space Research Organisation (ISRO).
+- It also recruits technical experts and specialists from the private sector and academia to enhance its technical capabilities and expertise.
+
+Responsibilities:
+
+1. Gathering and analyzing data from various sources, including satellites, radars, communications, and cyberspace.
+2. Providing technical assistance and expertise to other intelligence and security agencies in India.
+3. Offering timely and actionable intelligence inputs to the government and armed forces on matters of national security and strategic interest.
+4. Collaborating closely with other intelligence agencies, such as RAW, IB, DIA, NIA, and foreign agencies for intelligence sharing.
+
+NTRO Chairman Arun Sinha:
+
+- Arun Sinha was Appointed as the Chairman of the National Technical Research Organisation (NTRO).
+- He has been an advisor in NTRO for two years.
+- He is a 1984 batch Kerala cadre officer.
+
+National Critical Information Infrastructure Protection Centre (NCIIPC):
+
+- NCIIPC is a government organization created under Section 70A of the Information Technology Act, 2000 (amended 2008).
+- Established through a gazette notification on 16 January 2014.
+- Located in New Delhi, India.
+- Designated as the National Nodal Agency for Critical Information Infrastructure Protection.
+- Operates under the umbrella of the National Technical Research Organisation (NTRO).
+- Falls under the jurisdiction of the Prime Minister's Office (PMO).
+
+Significant Contributions:
+
+-Line of Control Strike (2016): NTRO played a pivotal role by providing satellite intelligence during this operation.
+-Balakot Airstrike (2019): NTRO's surveillance confirmed targets in Markaz Syed Ahmad Shaheed training camp just before the Indian Air Force airstrike.
+
+International Collaborations:
+
+-SIGINT Seniors Pacific (SSPAC): NTRO is an active member of this 10-member counter-terrorism platform led by the US NSA.

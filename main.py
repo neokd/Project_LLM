@@ -122,7 +122,7 @@ def retrival_qa_pipeline(device_type:str=DEVICE_TYPE):
             llm=llm,
             chain_type="stuff",  # try other chains types as well. refine, map_reduce, map_rerank
             retriever=retriever,
-            return_source_documents=True,  # verbose=True,
+            # return_source_documents=True,  # verbose=True,
             # callbacks=callback_manager,
             chain_type_kwargs={"prompt": prompt, "memory": memory},
     )

@@ -16,10 +16,10 @@ CHROMA_SETTINGS = Settings(
 )
 
 # GGUF Model 
-MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
-MODEL_BASENAME = "mistral-7b-instruct-v0.1.Q4_K_M.gguf"
-# MODEL_ID = "TheBloke/Llama-2-7b-Chat-GGUF"
-# MODEL_BASENAME = "llama-2-7b-chat.Q5_K_M.gguf"
+# MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
+# MODEL_BASENAME = "mistral-7b-instruct-v0.1.Q4_K_M.gguf"
+MODEL_ID = "TheBloke/Llama-2-7b-Chat-GGUF"
+MODEL_BASENAME = "llama-2-7b-chat.Q5_K_M.gguf"
 
 # HuggingFace Model
 HUGGINGFACE_MODEL_ID = "google/flan-t5-xxl"
@@ -38,7 +38,7 @@ if torch.cuda.is_available():
     DEVICE_TYPE = "cuda"
 elif torch.backends.mps.is_available():
     DEVICE_TYPE = "mps"
-elif torch.cude.is_rocm_available():
+elif torch.cuda.is_rocm_available():
     DEVICE_TYPE = "rocm"
 else:
     DEVICE_TYPE = "cpu"

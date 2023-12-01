@@ -16,7 +16,7 @@ from config import (
     INGEST_THREADS,
     EMBEDDING_MODEL_NAME,
     CHROMA_SETTINGS,
-    DEVICE_TYPE
+    DEVICE_TYPE,
 )
 
 class SQLiteLoader:
@@ -159,7 +159,7 @@ def builder():
 
     db = Chroma.from_documents(
         texts,
-        embeddings,
+        embedding=embeddings,
         persist_directory=PERSIST_DIRECTORY,
         client_settings=CHROMA_SETTINGS,
 
