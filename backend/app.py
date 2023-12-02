@@ -31,6 +31,12 @@ async def load_model():
     return {"message": "Model loaded", "status": status.HTTP_200_OK}
 
 
+@app.get("/api/upload/user_files")
+async def upload_user_files():
+    # Logic to upload user files and save to source directory and build the vector store
+    return {"message": "User files uploaded", "status": status.HTTP_200_OK}
+
+
 if __name__ == "__main__":
     import uvicorn
 
