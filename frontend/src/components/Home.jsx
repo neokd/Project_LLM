@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
+import Inputfeild from './Inputfeild';
 
 function Home() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -36,13 +37,11 @@ function Home() {
       <div
         className={`flex-1 flex flex-col overflow-hidden transition-all ease-in-out ${isSidebarOpen ? 'md:ml-64' : 'ml-0'}`}
       >
-
         <Navbar />
-
-        {/* Main content of your page */}
-        <div className="flex-1 overflow-x-hidden overflow-y-auto container mx-auto">
-          <h1>Hello World</h1>
-        </div>
+        <div className="flex-1 overflow-y-auto bg-slate-200 dark:bg-slate-800">
+        <Inputfeild />   
+        </div>       
+        
       </div>
     </div>
   );
