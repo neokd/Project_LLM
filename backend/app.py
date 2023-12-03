@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, WebSocket
 from langchain.llms import LlamaCpp
 from config import MODEL_PATH, MODEL_NAME, MODEL_FILE
 from huggingface_hub import hf_hub_download
@@ -36,6 +36,13 @@ async def upload_user_files():
     # Logic to upload user files and save to source directory and build the vector store
     return {"message": "User files uploaded", "status": status.HTTP_200_OK}
 
+
+@app.websocket("/api/chat")
+async def chat(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        await websocket.send_text(f"Message text was: {data}")
 
 if __name__ == "__main__":
     import uvicorn
