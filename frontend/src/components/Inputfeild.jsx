@@ -3,8 +3,8 @@ import useTheme from '../hooks/useTheme'
 
 function Inputfeild() {
     return(
-        
-<div className="flex h-[97vh] w-full flex-col">
+      <div className="flex flex-col items-center justify-center h-screen p-6">
+      <div className="flex flex-col p-6">
  
   <div
     className="flex-1 overflow-y-auto rounded-xl bg-slate-200 p-4 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7"
@@ -179,7 +179,7 @@ function Inputfeild() {
       </div>
     </div>
   </div>
-  <form className="mt-2">
+  <form className="mt-2 fixed bottom-0 left-0 right-0 flex items-center justify-center">
     <label htmlFor="chat-input" className="sr-only">Enter your prompt</label>
     <div className="relative">
       <button
@@ -222,8 +222,8 @@ function Inputfeild() {
       </button>
     </div>
   </form>
-</div>
-    
+  </div>
+</div>   
 );
 }
 
