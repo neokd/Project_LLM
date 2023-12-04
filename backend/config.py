@@ -21,7 +21,6 @@ else:
     DEVICE_TYPE = "cpu"
 
 
-
 SOURCE_DIRECTORY = os.path.join(os.path.dirname(__file__), "source")
 PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "db")
 
@@ -36,7 +35,7 @@ CHROMA_SETTINGS = Settings(
 
 
 CONTEXT_WINDOW_SIZE = 4096
-MAX_NEW_TOKENS = CONTEXT_WINDOW_SIZE 
+MAX_NEW_TOKENS = CONTEXT_WINDOW_SIZE
 
 
 N_GPU_LAYERS = 100  # Llama-2-70B has 83 layers

@@ -14,7 +14,7 @@ from config import (
     PERSIST_DIRECTORY,
     SOURCE_DIRECTORY,
     MODEL_PATH,
-    DEVICE_TYPE
+    DEVICE_TYPE,
 )
 
 

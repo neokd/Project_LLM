@@ -8,11 +8,9 @@ function Home() {
 
   useEffect(() => {
     let ws = new WebSocket("ws://localhost:8000/api/chat");
-    ws.onopen = () => {
-      console.log("connected");
-    };
-    ws.onmessage = (e) => {
-      console.log(e.data);
+    ws.onopen = () => ws.send("hello");
+    ws.onmessage = (data) => {
+      console.log('Received message from server:', data);
     };
     ws.onclose = () => {
       console.log("disconnected");
