@@ -36,7 +36,7 @@ function Home() {
         className={`flex-1 flex flex-col overflow-hidden transition-all ease-in-out ${isSidebarOpen ? 'md:ml-64' : 'ml-0'}`}
       >
         <Navbar />
-        <div className="flex-1 overflow-y-auto bg-slate-200 dark:bg-slate-800">
+        <div className="container mx-auto  overflow-y-auto bg-slate-200 dark:bg-slate-800">
         <Inputfeild />   
         </div>       
         

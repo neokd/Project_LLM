@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status, WebSocket
+from fastapi import FastAPI, status, WebSocket, File,UploadFile
 from langchain.llms import LlamaCpp
 from config import MODEL_PATH, MODEL_NAME, MODEL_FILE, DEVICE_TYPE, MAX_NEW_TOKENS, N_GPU_LAYERS
 from huggingface_hub import hf_hub_download
@@ -9,6 +9,7 @@ from langchain.callbacks.manager import CallbackManager
 import threading
 from schemas import ChatResponse
 from callbacks import StreamingLLMCallbackHandler, QuestionGenCallbackHandler
+
 
 app = FastAPI()
 llm = None
@@ -49,9 +50,10 @@ async def load_model():
     return {"message": "Model loaded", "status": status.HTTP_200_OK}
 
 
-@app.get("/api/upload/user_files")
-async def upload_user_files():
-    # Logic to upload user files and save to source directory and build the vector store
+@app.post("/api/upload/user_files")
+async def upload_user_files(file: UploadFile = File(...)):
+    with open(f"source/{file.filename}", "wb") as buffer:
+        buffer.write(file.file.read())
     return {"message": "User files uploaded", "status": status.HTTP_200_OK}
 
 
