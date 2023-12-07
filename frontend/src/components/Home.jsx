@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
-import { MdUploadFile, MdMicNone } from 'react-icons/md';
 import InputField from './InputField';
 import Modal from './Modal';
-import Alert from './Alert';
+
 
 function Home() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -12,8 +12,7 @@ function Home() {
   const [modal, setModal] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
-  
- 
+
   const attachFile = () => {
     setModal(!modal);
   };
@@ -39,32 +38,72 @@ function Home() {
   };
 
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(inputValue);
+
     messages.push({ message: inputValue, sender: "user" });
     setMessages(messages);
-    setInputValue("");
+    let data;
+
     try {
-      messages.push({ message: "Certainly! Quantum computing is a new type of computing that relies on the principles of quantum physics. Traditional computers, like the one you might be using right now, use bits to store and process information. These bits can represent either a 0 or a 1. In contrast, quantum computers use quantum bits, or qubits.Unlike bits, qubits can represent not only a 0 or a 1 but also a superposition of both states simultaneously. This means that a qubit can be in multiple states at once, which allows quantum computers to perform certain calculations much faster and more efficiently.", sender: "bot" });
-      setMessages(messages);
-      // const response = await fetch("/api/ask", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({ message: inputValue }),
-      // });
+      const response = await fetchEventSource("/api/llama", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
+        body: JSON.stringify({ question: inputValue }),
+
+        onmessage(event) {
+          // console.log(event.data);
+          data = JSON.parse(event.data);
+
+          if (data["finish_resason"] === "length" || data["finish_reason"] === "stop") {
+            console.log("Connection closed");
+            return;
+          } else {
+            // Use setStreamData to update the state correctly
+            setStreamData((prevData) => [...prevData, data]);
+
+          }
+        }
+      })
+      setInputValue("");
 
     }
     catch (error) {
-      console.error("Error:", error);
+      console.log(error);
     }
 
 
-  }
+    return (e) => {
+      onclose(e)
+    }
+  };
+  const [streamData, setStreamData] = useState([]);
+
+  useEffect(() => {
+    const eventSource = new EventSource('/api/chat');
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      // Update the state with the new token
+      setStreamData((prevData) => [...prevData, data.token]);
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('EventSource failed:', error);
+      eventSource.close();
+    };
+
+    return () => {
+      // Close the EventSource connection when the component unmounts
+      eventSource.close();
+    };
+  }, []); 
+
+
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-slate-200 dark:bg-slate-800 overflow-y-auto">
@@ -97,92 +136,23 @@ function Home() {
                           </div>
                         </div>
                       ) : (
-                        <div>
-                          <div className="mb-2 flex w-full flex-row justify-end gap-x-2 text-slate-500">
-                            <button className="hover:text-blue-600">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                viewBox="0 0 24 24"
-                                strokeWidth="2"
-                                stroke="currentColor"
-                                fill="none"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                <path
-                                  d="M7 11v8a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1v-7a1 1 0 0 1 1 -1h3a4 4 0 0 0 4 -4v-1a2 2 0 0 1 4 0v5h3a2 2 0 0 1 2 2l-1 5a2 3 0 0 1 -2 2h-7a3 3 0 0 1 -3 -3"
-                                ></path>
-                              </svg>
-                            </button>
-                            <button className="hover:text-blue-600" type="button">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                viewBox="0 0 24 24"
-                                strokeWidth="2"
-                                stroke="currentColor"
-                                fill="none"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                <path
-                                  d="M7 13v-8a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v7a1 1 0 0 0 1 1h3a4 4 0 0 1 4 4v1a2 2 0 0 0 4 0v-5h3a2 2 0 0 0 2 -2l-1 -5a2 3 0 0 0 -2 -2h-7a3 3 0 0 0 -3 3"
-                                ></path>
-                              </svg>
-                            </button>
-                            <button className="hover:text-blue-600" type="button">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                viewBox="0 0 24 24"
-                                strokeWidth="2"
-                                stroke="currentColor"
-                                fill="none"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                <path
-                                  d="M8 8m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"
-                                ></path>
-                                <path
-                                  d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"
-                                ></path>
-                              </svg>
-                            </button>
-                          </div>
-                          <div
-                            className="mb-4 flex rounded-xl bg-slate-50 px-2 py-6 dark:bg-slate-900 sm:px-4"
-                          >
-                            <img
-                              className="mr-2 flex h-8 w-8 rounded-full sm:mr-4"
-                              src="https://dummyimage.com/256x256/354ea1/ffffff&text=G"
-                            />
-
-                            <div className="flex max-w-3xl items-center rounded-xl">
-                              <p>
-                                {message.message}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+                        null
                       )
                     }
-
+                     <ul>
+        {streamData.map((token, index) => (
+          <li key={index}>{token}</li>
+        ))}
+      </ul>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-
-
         </div>
         <InputField inputValue={inputValue} setInputValue={setInputValue} handleSubmit={handleSubmit} onAttachFile={attachFile} />
         {modal && <Modal onClose={attachFile} />}
-       
+
       </div>
 
 

@@ -21,15 +21,15 @@ import json
 from fastapi import Request
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
-
-
+from llama_cpp import Llama
 from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],  # You can replace "*" with your frontend's origin(s)
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -62,12 +62,14 @@ async def load_model():
         "f16_kv": True,
         "streaming": True,
     }
-    if DEVICE_TYPE.lower() == "mps":
-        kwargs["n_gpu_layers"] = 1  # only for MPS devices
-    if DEVICE_TYPE.lower() == "cuda":
-        kwargs["n_gpu_layers"] = N_GPU_LAYERS  # set this based on your GPU
-        # Create a LlamaCpp object (language model)
-    llm = LlamaCpp(**kwargs)
+    
+    llm = Llama(model_path=model_path, max_tokens=MAX_NEW_TOKENS, n_ctx=MAX_NEW_TOKENS, n_batch=512,  verbose=False, f16_kv=True, streaming=True)
+    # if DEVICE_TYPE.lower() == "mps":
+    #     kwargs["n_gpu_layers"] = 1  # only for MPS devices
+    # if DEVICE_TYPE.lower() == "cuda":
+    #     kwargs["n_gpu_layers"] = N_GPU_LAYERS  # set this based on your GPU
+    #     # Create a LlamaCpp object (language model)
+    # llm = LlamaCpp(**kwargs)
 
     return {"message": "Model loaded", "status": status.HTTP_200_OK}
 
@@ -84,34 +86,38 @@ async def upload_user_files(files: List[UploadFile]):
 
     return {"file_success":[file.filename for file in files]}
 
-
-# llm = LlamaCpp(model_path="/Users/kuldeep/Project/NeoGPT/neogpt/models/models--TheBloke--Mistral-7B-Instruct-v0.1-GGUF/snapshots/45167a542b6fa64a14aea61a4c468bbbf9f258a8/mistral-7b-instruct-v0.1.Q4_K_M.gguf",)
-# @app.get("/api/llama")
-# async def chat_llama(request: Request):
-#     stream = llm(
-#         "Question: Who is the prime minister of India? Answer:",
-#         max_tokens=100,
-#         stop=["Q:", "\n"],
-#         stream=True,
-#     )
-
-#     async def async_generator():
-#         for item in stream:
-#             yield item
-
-#     async def sse_generator():
-#         async for item in async_generator():
-#             if await request.is_disconnected():
-#                 break
-#             result = copy.deepcopy(item)
-#             text = result["choices"][0]["text"]
-#             yield {"data": text, "event": "message"}
-
-#     return EventSourceResponse(sse_generator())
-
 class Query(BaseModel):
     question: str
 
+# Streaming with FastAPI
+@app.post("/api/llama")
+async def chat_llama(request: Request, question: Query):
+
+    stream = llm(
+        str(question.question),
+        max_tokens=100,
+        stop=["Q:"],
+        stream=True,
+    )
+
+    async def async_generator():
+        for item in stream:
+            yield item
+            print(item)
+
+    async def sse_generator():
+        async for item in async_generator():
+            if await request.is_disconnected():
+                break
+            result = copy.deepcopy(item)
+            text = result["choices"][0]["text"]
+            finish_reason = result["choices"][0]["finish_reason"]
+            yield json.dumps({"id" : result["id"],"data": text, "event": "stream", "finish_reason": finish_reason})
+
+
+    return EventSourceResponse(sse_generator(),media_type='text/event-stream')
+
+# Fake Streaming with LangChain
 @app.get("/api/stream")
 async def stream_llm(request: Request):
     global llm_chain, llm
@@ -132,7 +138,7 @@ async def stream_llm(request: Request):
 
     return EventSourceResponse(sse_generator(), media_type="text/event-stream")
 
-
+# Streaming with Threading
 @app.get("/api/model/stream")
 async def stream():
     return StreamingResponse(chat("List top 5 places to visit in india"), media_type='text/event-stream')

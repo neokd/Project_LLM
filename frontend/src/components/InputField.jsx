@@ -5,8 +5,8 @@ import Modal from './Modal';
 function InputField({ inputValue, setInputValue, handleSubmit, onAttachFile}) {
 
   return (
-    <div className='rounded-md lg:mx-24 '>
-      <form className="flex justify-center ">
+    <div className='rounded-md lg:mx-24  '>
+      <form className="flex justify-center">
         <label htmlFor="chat-input" className="sr-only">
           Enter your prompt
         </label>
