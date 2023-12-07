@@ -8,9 +8,9 @@ function Navbar() {
         setCurrenTheme(localStorage.getItem('theme'))
     }, [nextTheme])
     return (
-        <div className="sticky h-16 top-0 md:top-0 top-12 w-full px-4  justify-between backdrop-blur flex  transition-colors duration-500 lg:z-50 lg:border-b lg:border-slate-900/10 dark:border-slate-50/[0.06] bg-white/60 supports-backdrop-blur:bg-white/95 dark:bg-violet-900/60">
+        <div className="sticky h-16 top-12 lg:top-0  md:top-0 w-full px-4  justify-between backdrop-blur flex  transition-colors duration-500 lg:z-50 lg:border-b lg:border-slate-900/10 dark:border-slate-50/[0.06] bg-white/60 supports-backdrop-blur:bg-white/95 dark:bg-violet-900/60">
             <div className='flex flex-col mt-4'>
-                <h1 className="text-2xl font-bold dark:text-white">Chat UI</h1>
+                <h1 className="text-2xl font-bold dark:text-white">RS BOT</h1>
             </div>
            
             <div className='flex flex-col mt-2'>

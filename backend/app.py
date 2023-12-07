@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, status, File, UploadFile
 from langchain.llms import LlamaCpp
 from config import (
@@ -17,9 +16,23 @@ from callbacks import  ThreadedGenerator
 from langchain.callbacks.manager import CallbackManager
 from fastapi.responses import StreamingResponse
 from streaming import chat
+import copy
+import json
+from fastapi import Request
+from pydantic import BaseModel
+from sse_starlette.sse import EventSourceResponse
+
+
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 llm = None
 llm_chain = None
 callback_manager = None
@@ -44,7 +57,7 @@ async def load_model():
         "max_tokens": MAX_NEW_TOKENS,
         "n_ctx": MAX_NEW_TOKENS,
         "n_batch": 512,
-        # "callback_manager": CallbackManager([ChainStreamHandler()]),
+        "callback_manager": CallbackManager([StreamingStdOutCallbackHandler]),
         "verbose": False,
         "f16_kv": True,
         "streaming": True,
@@ -58,17 +71,18 @@ async def load_model():
 
     return {"message": "Model loaded", "status": status.HTTP_200_OK}
 
+from typing import List
 
 @app.post("/api/upload/user_files")
-async def upload_user_files(file: UploadFile = File(...)):
-    with open(f"source/{file.filename}", "wb") as buffer:
-        buffer.write(file.file.read())
-    return {"message": "User files uploaded", "status": status.HTTP_200_OK}
+async def upload_user_files(files: List[UploadFile]):
+    # Process each uploaded file
+    for file in files:
+        contents = await file.read()
+        with open("source/" + file.filename, "wb") as buffer:
+            buffer.write(contents)
+            buffer.close()
 
-
-
-    
-
+    return {"file_success":[file.filename for file in files]}
 
 
 # llm = LlamaCpp(model_path="/Users/kuldeep/Project/NeoGPT/neogpt/models/models--TheBloke--Mistral-7B-Instruct-v0.1-GGUF/snapshots/45167a542b6fa64a14aea61a4c468bbbf9f258a8/mistral-7b-instruct-v0.1.Q4_K_M.gguf",)
@@ -94,20 +108,11 @@ async def upload_user_files(file: UploadFile = File(...)):
 #             yield {"data": text, "event": "message"}
 
 #     return EventSourceResponse(sse_generator())
-import copy
-import json
-from fastapi import Request
-from pydantic import BaseModel
-from typing import Optional
-from sse_starlette.sse import EventSourceResponse
-
 
 class Query(BaseModel):
     question: str
 
-
-
-@app.get("/api/stream_llm1")
+@app.get("/api/stream")
 async def stream_llm(request: Request):
     global llm_chain, llm
     llm_chain = LLMChain(
@@ -123,11 +128,12 @@ async def stream_llm(request: Request):
             result = copy.deepcopy(item)
             for chunk in result["text"].split():
                 yield json.dumps({"data": chunk, "event": "stream"}) + "\n"
+                
 
     return EventSourceResponse(sse_generator(), media_type="text/event-stream")
 
 
-@app.get("/question-stream")
+@app.get("/api/model/stream")
 async def stream():
     return StreamingResponse(chat("List top 5 places to visit in india"), media_type='text/event-stream')
 

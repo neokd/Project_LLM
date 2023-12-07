@@ -20,7 +20,7 @@ function Sidebar({ isOpen, onToggle }) {
 
                 </div>
                 <div className='flex '>
-                    <h1 className="text-2xl font-bold dark:text-white">RS BOT</h1>
+                    <h1 className="text-2xl font-bold dark:text-white">HISTORY</h1>
                 </div>
             </div>
 
