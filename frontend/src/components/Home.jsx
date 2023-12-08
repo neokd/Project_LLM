@@ -163,7 +163,7 @@ function Home() {
                           src={bot}
                           alt="Streamed"
                         />
-                        <div className="flex max-w-3xl items-center rounded-xl" ref={messagesContainerRef}>
+                        <div className="flex  items-center rounded-xl" ref={messagesContainerRef}>
                           {response.content.split('\n').map((line, lineIndex) => (
                             <React.Fragment key={lineIndex}>
                               <ReactMarkdown remarkPlugins={[gfm,breaks]} className="text-slate-900 dark:text-slate-300">
