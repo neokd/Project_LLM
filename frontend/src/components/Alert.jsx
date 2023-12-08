@@ -29,7 +29,7 @@ function Alert({ title, message, show, handleAlert, colorType }) {
         }
     }
 
-    const [countdown, setCountdown] = useState(10); // Initial countdown duration in seconds
+    const [countdown, setCountdown] = useState(10);
 
     useEffect(() => {
         let timer;

@@ -21,6 +21,13 @@ from callbacks import StreamingResponse, TokenStreamingCallbackHandler
 
 app = FastAPI()
 llm = None
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"], 
+)
 
 @app.get("/")
 async def root():
@@ -28,7 +35,7 @@ async def root():
 
 @app.get("/api/load_model")
 async def load_model():
-    global llm, llm_chain, callback_manager
+    global llm
     model_path = hf_hub_download(
         repo_id=MODEL_NAME,
         filename=MODEL_FILE,
@@ -64,42 +71,22 @@ async def upload_user_files(files: List[UploadFile]):
             buffer.write(contents)
             buffer.close()
 
-    return {"file_success":[file.filename for file in files]}
+    return {"message": "Files uploaded", "status": status.HTTP_200_OK}
 
 class ChatInput(BaseModel):
     input: str
 
 
-def chain_factory() -> ConversationChain: 
-    model_path = hf_hub_download(
-        repo_id=MODEL_NAME,
-        filename=MODEL_FILE,
-        resume_download=True,
-        cache_dir=MODEL_PATH,
-    )
-    kwargs = {
-        "model_path": model_path,
-        "max_tokens": MAX_NEW_TOKENS,
-        "n_ctx": MAX_NEW_TOKENS,
-        "n_batch": 512,
-        "callback_manager": CallbackManager([StreamingStdOutCallbackHandler]),
-        "verbose": False,
-        "f16_kv": True,
-        "streaming": True,
-    }
-    
-    if DEVICE_TYPE.lower() == "mps":
-        kwargs["n_gpu_layers"] = 1  # only for MPS devices
-    if DEVICE_TYPE.lower() == "cuda":
-        kwargs["n_gpu_layers"] = N_GPU_LAYERS  # set this based on your GPU
-        # Create a LlamaCpp object (language model)
-    llm = LlamaCpp(**kwargs)
-    return ConversationChain(
-        llm = llm
+def chain_factory() -> LLMChain: 
+    global llm
+    return LLMChain(
+        llm = llm,
+        prompt=PromptTemplate.from_template("Give response to user always in one word for the question {input}"),
     )
 
 @app.post("/api/chat")
-async def chat(request: ChatInput, chain: ConversationChain = Depends(chain_factory)):
+async def chat(request: ChatInput, chain: LLMChain = Depends(chain_factory)):
+    print(request.input)
     return StreamingResponse(
         chain=chain,
         config={

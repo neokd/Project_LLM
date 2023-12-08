@@ -282,8 +282,6 @@ class StreamingResponse(_StreamingResponse):
                     callback.send = send
 
         try:
-            # TODO: migrate to `.ainvoke` when adding support
-            # for LCEL
             loop = asyncio.get_event_loop()
             outputs = await loop.run_in_executor(
                 None, partial(self.chain, **self.config)
