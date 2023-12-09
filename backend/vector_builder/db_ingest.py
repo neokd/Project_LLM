@@ -9,9 +9,7 @@ class content_loader_class:
     def load_single_document(file_path):
         try:
             file_extension = os.path.splitext(file_path)[1]
-            print("file extension : ",file_extension)
             loader_class = DOCUMENT_MAP.get(file_extension)
-            print("loader class : ",loader_class)
             if loader_class:
                 loader = loader_class(file_path)
             else:
