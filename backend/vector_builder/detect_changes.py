@@ -1,5 +1,5 @@
 import os
-from folder_structure import folder_structure_class
+from vector_builder.folder_structure import folder_structure_class
 from config import SOURCE_DIRECTORY, STRUCTURE_DIRECTORY
 
 class detect_changes_class:
