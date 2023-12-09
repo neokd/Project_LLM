@@ -1,5 +1,6 @@
-
-from fastapi import FastAPI, status, File, UploadFile
+from fastapi import FastAPI , status , UploadFile,  Depends 
+from fastapi.middleware.cors import CORSMiddleware  
+from pydantic import BaseModel
 from langchain.llms import LlamaCpp
 from config import (
     MODEL_PATH,
@@ -13,26 +14,109 @@ from huggingface_hub import hf_hub_download
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from callbacks import  ThreadedGenerator
 from langchain.callbacks.manager import CallbackManager
-from fastapi.responses import StreamingResponse
-from streaming import chat
+from typing import List
+from callbacks import StreamingResponse, TokenStreamingCallbackHandler
+from sqlalchemy import create_engine, Column, String, Integer
+from sqlalchemy.ext.declarative import declarative_base
+from databases import Database
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from pydantic import BaseModel
 
 
 app = FastAPI()
-llm = None
-llm_chain = None
-callback_manager = None
+Base = declarative_base()
+DATABASE_URL = "sqlite:///test.db"
+class UserDB(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
+    password = Column(String)
 
 
-@app.get("/api/test")
-def test():
-    return {"message": "LLM Test API", "status": status.HTTP_200_OK}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class Register(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class Login(BaseModel):
+    email: str
+    password: str
+
+
+# Create an SQLite database engine
+engine = create_engine(DATABASE_URL)
+
+# Create the chat_messages table
+Base.metadata.create_all(bind=engine)
+
+# Create a session to interact with the database
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+@app.post('/api/register')
+async def register(user: Register):
+    db = SessionLocal()
+    try:
+        # Check if the user with the provided email already exists
+        existing_user = db.query(UserDB).filter(UserDB.email == user.email).first()
+        if existing_user:
+            return {"message": "Email already registered", "status": status.HTTP_400_BAD_REQUEST}
+
+        # If the user does not exist, create a new user in the database
+        new_user = UserDB(username = user.username, email=user.email, password=user.password)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    finally:
+        db.close()
+
+    return {"message": "Registration successful", "status": status.HTTP_201_CREATED, "user_id": new_user.id , "username": new_user.username}
+
+
+@app.post('/api/login')
+async def login(user: Login):
+    db = SessionLocal()
+    try:
+        # Query the database for the user with the provided email and password
+        db_user = (
+            db.query(UserDB)
+            .filter(UserDB.email == user.email, UserDB.password == user.password)
+            .one()
+        )
+        return {
+            "message": "Login successful",
+            "status": status.HTTP_200_OK,
+            "user_id": db_user.id,
+            "username": db_user.username,
+        }
+
+    except NoResultFound:
+        return {
+            "message": "Invalid credentials",
+            "status": status.HTTP_401_UNAUTHORIZED
+        }
+    finally:
+        db.close()
 
 
 @app.get("/api/load_model")
 async def load_model():
-    global llm, llm_chain, callback_manager
+    global llm
     model_path = hf_hub_download(
         repo_id=MODEL_NAME,
         filename=MODEL_FILE,
@@ -44,11 +128,12 @@ async def load_model():
         "max_tokens": MAX_NEW_TOKENS,
         "n_ctx": MAX_NEW_TOKENS,
         "n_batch": 512,
-        # "callback_manager": CallbackManager([ChainStreamHandler()]),
+        "callback_manager": CallbackManager([StreamingStdOutCallbackHandler]),
         "verbose": False,
         "f16_kv": True,
         "streaming": True,
     }
+    
     if DEVICE_TYPE.lower() == "mps":
         kwargs["n_gpu_layers"] = 1  # only for MPS devices
     if DEVICE_TYPE.lower() == "cuda":
@@ -58,82 +143,37 @@ async def load_model():
 
     return {"message": "Model loaded", "status": status.HTTP_200_OK}
 
-
 @app.post("/api/upload/user_files")
-async def upload_user_files(file: UploadFile = File(...)):
-    with open(f"source/{file.filename}", "wb") as buffer:
-        buffer.write(file.file.read())
-    return {"message": "User files uploaded", "status": status.HTTP_200_OK}
+async def upload_user_files(files: List[UploadFile]):
+    # Process each uploaded file
+    for file in files:
+        contents = await file.read()
+        with open("source/" + file.filename, "wb") as buffer:
+            buffer.write(contents)
+            buffer.close()
+
+    return {"message": "Files uploaded", "status": status.HTTP_200_OK}
+
+class ChatInput(BaseModel):
+    input: str
 
 
-
-    
-
-
-
-# llm = LlamaCpp(model_path="/Users/kuldeep/Project/NeoGPT/neogpt/models/models--TheBloke--Mistral-7B-Instruct-v0.1-GGUF/snapshots/45167a542b6fa64a14aea61a4c468bbbf9f258a8/mistral-7b-instruct-v0.1.Q4_K_M.gguf",)
-# @app.get("/api/llama")
-# async def chat_llama(request: Request):
-#     stream = llm(
-#         "Question: Who is the prime minister of India? Answer:",
-#         max_tokens=100,
-#         stop=["Q:", "\n"],
-#         stream=True,
-#     )
-
-#     async def async_generator():
-#         for item in stream:
-#             yield item
-
-#     async def sse_generator():
-#         async for item in async_generator():
-#             if await request.is_disconnected():
-#                 break
-#             result = copy.deepcopy(item)
-#             text = result["choices"][0]["text"]
-#             yield {"data": text, "event": "message"}
-
-#     return EventSourceResponse(sse_generator())
-import copy
-import json
-from fastapi import Request
-from pydantic import BaseModel
-from typing import Optional
-from sse_starlette.sse import EventSourceResponse
-
-
-class Query(BaseModel):
-    question: str
-
-
-
-@app.get("/api/stream_llm1")
-async def stream_llm(request: Request):
-    global llm_chain, llm
-    llm_chain = LLMChain(
+def chain_factory() -> LLMChain: 
+    global llm
+    return LLMChain(
         llm = llm,
-        prompt=PromptTemplate.from_template(
-        "You are a helpful assistant, you will use the provided context to answer user questions.Read the given context before answering questions and think step by step. If you can not answer a user  question based on the provided context, inform the user. Do not use any other information for answering user. Initialize the conversation with a greeting if no context is provided. {question}. Always generate response in markdown format.",
-        )
+        prompt=PromptTemplate.from_template("Give response to user always in one word for the question {input}"),
     )
-    async def sse_generator():
-        async for item in llm_chain.astream("List top 5 places to visit in india"):
-            if await request.is_disconnected():
-                break
-            result = copy.deepcopy(item)
-            for chunk in result["text"].split():
-                yield json.dumps({"data": chunk, "event": "stream"}) + "\n"
 
-    return EventSourceResponse(sse_generator(), media_type="text/event-stream")
-
-
-@app.get("/question-stream")
-async def stream():
-    return StreamingResponse(chat("List top 5 places to visit in india"), media_type='text/event-stream')
-
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, reload=True)
+@app.post("/api/chat")
+async def chat(request: ChatInput, chain: LLMChain = Depends(chain_factory)):
+    print(request.input)
+    return StreamingResponse(
+        chain=chain,
+        config={
+            "inputs": request.model_dump(),
+            "callbacks": [
+                TokenStreamingCallbackHandler(output_key=chain.output_key),
+            ],
+        },
+    )
