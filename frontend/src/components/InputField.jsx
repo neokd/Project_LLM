@@ -34,11 +34,16 @@ function InputField({ inputValue, setInputValue, handleSubmit, onAttachFile, }) 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleSubmit(e);
-      // Reset transcript when the input is sent
-      resetTranscript();
+  
+      // Check if the input value is empty before submitting
+      if (inputValue?.trim() !== '') {
+        handleSubmit(e);
+
+        resetTranscript();
+      }
     }
   };
+  
 
   const handleVoiceInput = () => {
     setIsListening(!isListening);
@@ -60,7 +65,6 @@ function InputField({ inputValue, setInputValue, handleSubmit, onAttachFile, }) 
     <div className='rounded-md lg:mx-24 '>
 
       <form className="flex justify-center">
-
         <label htmlFor="chat-input" className="sr-only">
           Enter your prompt
         </label>

@@ -1,8 +1,16 @@
 import React from 'react';
-import { FaAngleLeft, FaAngleRight, FaCircleXmark, FaAlignJustify } from "react-icons/fa6";
+import { FaAngleLeft, FaAngleRight, FaCircleXmark, FaAlignJustify, FaUser } from "react-icons/fa6";
 import { RiMenu3Fill } from "react-icons/ri";
+import { IoLogOutOutline } from "react-icons/io5";
+import { FaUserGear } from "react-icons/fa6";
 
 function Sidebar({ isOpen, onToggle }) {
+    const logOutUser = () => {
+        localStorage.removeItem('username')
+        localStorage.removeItem('user_id')
+        window.location.href = '/'
+    }
+
     return (
         <div className="relative">
             {/* Sidebar in mobile view */}
@@ -55,6 +63,18 @@ function Sidebar({ isOpen, onToggle }) {
                         </svg>
                         New Chat
                     </button>
+                </div>
+
+                <div className="mx-3 w-11/12 fixed bottom-8 border-t border-black dark:border-slate-200 pt-4 ">
+                    <div className='flex flex-row items-center justify-start gap-x-4'>
+                        {/* <FaUser size={42} className='mx-4 p-2 rounded-full bg-[#5841d9] text-gray-50   dark:text-white' />
+                        <div className='flex flex-col'>
+                            <h1 className='text-lg  dark:text-white'>{localStorage.getItem('username')}</h1>
+                            <h1 className='text-lg dark:text-white'></h1>
+                        </div> */}
+                    </div>
+                    <button className="flex w-full gap-x-4 rounded-lg  p-4 text-left text-md font-medium  transition-colors duration-200 focus:outline-none dark:border-slate-700 dark:text-slate-200 dark:hover:text-purple-500" ><FaUserGear size={20} />Custom Instruction</button>
+                    <button className="flex w-full gap-x-4 rounded-lg  p-4 text-left text-md font-medium  transition-colors duration-200 focus:outline-none dark:border-slate-700 dark:text-slate-200 dark:hover:text-purple-500" onClick={logOutUser}><IoLogOutOutline size={20} /> Logout</button>
                 </div>
             </aside>
 

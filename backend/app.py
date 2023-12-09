@@ -1,7 +1,7 @@
 from fastapi import FastAPI , status , UploadFile,  Depends , Form
 from fastapi.middleware.cors import CORSMiddleware  
 from pydantic import BaseModel
-from langchain.llms import LlamaCpp
+from langchain.llms.llamacpp import LlamaCpp
 from config import (
     MODEL_PATH,
     MODEL_NAME,
@@ -13,12 +13,12 @@ from config import (
     STRUCTURE_DIRECTORY
 )
 from huggingface_hub import hf_hub_download
-from langchain.chains import LLMChain
+from langchain.chains import LLMChain, RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.callbacks.manager import CallbackManager
 from typing import List
-from callbacks import StreamingResponse, TokenStreamingCallbackHandler
+from callbacks import StreamingResponse, TokenStreamingCallbackHandler, SourceDocumentsStreamingCallbackHandler
 from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from databases import Database
@@ -32,6 +32,7 @@ from vector_builder.folder_structure import folder_structure_class
 from vector_builder.db_ingest import content_loader_class
 from vector_builder.detect_changes import detect_changes_class
 from builder import update_json_structure, create_json_structure
+from langchain.vectorstores.chroma import Chroma
 import os
 
 app = FastAPI()
@@ -42,7 +43,7 @@ DATABASE_URL = "sqlite:///test.db"
 folder_structure_object = folder_structure_class()
 detect_changes_object = detect_changes_class()
 root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
-create_json_structure(folder_structure_object)
+# create_json_structure(folder_structure_object)
 
 class UserDB(Base):
     __tablename__ = 'users'
@@ -163,15 +164,15 @@ async def upload_user_files(files: List[UploadFile], username:str = Form(...)):
     USER_DIR = "source/" + str(username) + "/"
     if not os.path.exists(USER_DIR):
         os.mkdir(USER_DIR)
-
+    print(files)
     for file in files:
         contents = await file.read()
         with open("source/" + str(username) + "/" + file.filename, "wb") as buffer:
             buffer.write(contents)
             buffer.close()
         
-        if os.path.exists(STRUCTURE_DIRECTORY):
-            update_json_structure(folder_structure_object,detect_changes_object)
+        # if os.path.exists(STRUCTURE_DIRECTORY):
+        #     update_json_structure(folder_structure_object,detect_changes_object)
 
     return {"message": "Files uploaded", "status": status.HTTP_200_OK}
 
@@ -195,6 +196,7 @@ async def chat(request: ChatInput, chain: LLMChain = Depends(chain_factory)):
             "inputs": request.model_dump(),
             "callbacks": [
                 TokenStreamingCallbackHandler(output_key=chain.output_key),
+                # SourceDocumentsStreamingCallbackHandler()
             ],
         },
     )
