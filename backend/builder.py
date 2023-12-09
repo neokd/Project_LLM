@@ -1,126 +1,98 @@
-import logging
 import os
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from langchain.docstore.document import Document
-from langchain.embeddings import HuggingFaceInstructEmbeddings
+import chromadb
+from vector_builder.folder_structure import folder_structure_class
+from vector_builder.db_ingest import content_loader_class
+from vector_builder.detect_changes import detect_changes_class
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores.chroma import Chroma
+from config import (SOURCE_DIRECTORY,STRUCTURE_DIRECTORY,PERSIST_DIRECTORY)
 
-from config import (
-    CHROMA_SETTINGS,
-    DOCUMENT_MAP,
-    EMBEDDING_MODEL_NAME,
-    INGEST_THREADS,
-    PERSIST_DIRECTORY,
-    SOURCE_DIRECTORY,
-    MODEL_PATH,
-    DEVICE_TYPE,
-)
+def create_json_structure(folder_structure_object):
+    folder_structure=folder_structure_object.create_folder_structure_json(SOURCE_DIRECTORY)
+    folder_structure_object.write_json_file(folder_structure,STRUCTURE_DIRECTORY)
+    folder_json_data=folder_structure_object.read_json_file(STRUCTURE_DIRECTORY)
+    subfolders, files_paths = folder_structure_object.extract_subfolder_and_files(folder_json_data[root_directory])
 
+    vector_db_creation(content_loader_object,subfolders,files_paths)
+    print("Json structure is created with necessary files")
+    return None
 
-def load_single_document(file_path: str) -> Document:
-    # Loads a single document from a file path
-    try:
-        file_extension = os.path.splitext(file_path)[1]
-        loader_class = DOCUMENT_MAP.get(file_extension)
-        if loader_class:
-            #    file_log(file_path + ' loaded.')
-            loader = loader_class(file_path)
-        else:
-            raise ValueError("Document type is undefined")
-        return loader.load()[0]
-    except Exception:
-        return None
+def update_json_structure(folder_structure_object,detect_changes_object):
+    previous_json_structure = folder_structure_object.read_json_file(STRUCTURE_DIRECTORY)
+    current_json_structure = folder_structure_object.create_folder_structure_json(SOURCE_DIRECTORY)
 
+    if previous_json_structure!=current_json_structure:
+        creation_subfolders=[]
+        creation_files_count=0
+        subfolders_prev, files_paths_prev = detect_changes_object.get_folder_data(folder_structure_object, previous_json_structure)
+        subfolders_curr, files_paths_curr = detect_changes_object.get_folder_data(folder_structure_object, current_json_structure)
+        added_subfolders, removed_subfolders, added_files, deleted_files = detect_changes_object.changes(
+        subfolders_prev, files_paths_prev, subfolders_curr, files_paths_curr)
 
-def load_document_batch(filepaths):
-    logging.info("Loading document batch")
-    # create a thread pool
-    with ThreadPoolExecutor(len(filepaths)) as exe:
-        # load files
-        futures = [exe.submit(load_single_document, name) for name in filepaths]
-        # collect data
-        if futures is None:
-            return None
-        else:
-            data_list = [future.result() for future in futures]
-            # return data and file paths
-            return (data_list, filepaths)
+        if added_subfolders:
+            creation_subfolders+=added_subfolders
+        for key,value in added_files.items():
+            if value:
+                creation_files_count+=1
+                creation_subfolders.append(key)
+        
+        creation_subfolders=list(set(creation_subfolders))
 
+        if creation_subfolders:
+            vector_db_creation(content_loader_object,creation_subfolders,added_files,creation_files_count)
+        if removed_subfolders:
+            vector_db_deletion(removed_subfolders)
+   
+        folder_structure_object.write_json_file(current_json_structure, STRUCTURE_DIRECTORY)
+        print("The json folder structure has been updated !!!")
 
-def load_documents(source_dir: str) -> list[Document]:
-    # Loads all documents from the source documents directory, including nested folders
-    paths = []
-    for root, _, files in os.walk(source_dir):
-        for file_name in files:
-            print("Importing: " + file_name)
-            file_extension = os.path.splitext(file_name)[1]
-            source_file_path = os.path.join(root, file_name)
-            if file_extension in DOCUMENT_MAP.keys():
-                paths.append(source_file_path)
-
-    # Have at least one worker and at most INGEST_THREADS workers
-    n_workers = min(INGEST_THREADS, max(len(paths), 1))
-    chunksize = round(len(paths) / n_workers)
-    docs = []
-    with ProcessPoolExecutor(n_workers) as executor:
-        futures = []
-        # split the load operations into chunks
-        for i in range(0, len(paths), chunksize):
-            # select a chunk of filenames
-            filepaths = paths[i : (i + chunksize)]
-            # submit the task
-            try:
-                future = executor.submit(load_document_batch, filepaths)
-            except Exception:
-                future = None
-            if future is not None:
-                futures.append(future)
-        # process all results
-        for future in as_completed(futures):
-            # open the file and load the data
-            try:
-                contents, _ = future.result()
-                docs.extend(contents)
-            except Exception:
-                pass
-
-    return docs
-
-
-def main(device_type: str = DEVICE_TYPE):
-    # Load documents and split in chunks
-    logging.info(f"Loading documents from {SOURCE_DIRECTORY}")
-    documents = load_documents(SOURCE_DIRECTORY)
-    print(SOURCE_DIRECTORY)
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    texts = text_splitter.split_documents(documents)
-    logging.info(f"Loaded {len(documents)} documents from {SOURCE_DIRECTORY}")
-    logging.info(f"Split into {len(texts)} chunks of text")
-
-    # Create embeddings
-    embeddings = HuggingFaceInstructEmbeddings(
-        model_name=EMBEDDING_MODEL_NAME,
-        model_kwargs={"device": device_type},
-        cache_folder=MODEL_PATH,
-    )
-
-    db = Chroma.from_documents(
-        texts,
-        embeddings,
-        persist_directory=PERSIST_DIRECTORY,
-        client_settings=CHROMA_SETTINGS,
-    )
-
-    if db is not None:
-        return "Success"
     else:
-        return "Failure"
+        print("No changes is detected in folder structure !!!")
+    return None
+    
 
+def vector_db_creation(content_loader_object,subfolders,files_paths,count=1):
+    client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
+    if count:
+        for subfolder in subfolders:
+            main_content_only=[]
+            metadata_main_content=[]
+            document_contents = content_loader_object.load_documents(files_paths[subfolder])
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+            texts = text_splitter.split_documents(document_contents)
+
+            main_content_only=[text.page_content for text in texts]
+            metadata_main_content=[text.metadata for text in texts]
+
+            collection = client.get_or_create_collection(subfolder)
+
+            existing_collection_length = len(collection.get()['ids'])
+
+            collection.add(
+                            documents=main_content_only,
+                            metadatas=metadata_main_content,
+                            ids=['id'+str(i) for i in range((existing_collection_length+1),(len(main_content_only)+existing_collection_length+1))]
+                        )
+            print("Document added to vector DB !!!")
+        
+    else:
+        for subfolder in subfolders:
+            client.get_or_create_collection(name=subfolder)
+        print('collection is created !!!')
+
+
+def vector_db_deletion(subfolders):
+    client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
+    for subfolder in subfolders:
+        client.delete_collection(name=subfolder)
+        print(f'{subfolder} collection has been deleted !!!')
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)s - %(message)s",
-        level=logging.INFO,
-    )
-    main()
+    folder_structure_object = folder_structure_class()
+    content_loader_object = content_loader_class()
+    detect_changes_object = detect_changes_class()
+    root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
+
+    if os.path.exists(STRUCTURE_DIRECTORY):
+        update_json_structure(folder_structure_object,detect_changes_object)
+    else:
+        create_json_structure(folder_structure_object)

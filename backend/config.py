@@ -1,16 +1,53 @@
 import os
+import torch
 from chromadb.config import Settings
+# from langchain.document_loaders import (
+#     CSVLoader,
+#     TextLoader,
+#     UnstructuredExcelLoader,
+#     Docx2txtLoader,
+# )
+# from langchain.document_loaders import (
+#     UnstructuredFileLoader,
+#     UnstructuredMarkdownLoader,
+# )
+
 from langchain.document_loaders import (
     CSVLoader,
+    JSONLoader,
+    PDFMinerLoader,
     TextLoader,
+    UnstructuredEPubLoader,
     UnstructuredExcelLoader,
-    Docx2txtLoader,
-)
-from langchain.document_loaders import (
-    UnstructuredFileLoader,
+    UnstructuredHTMLLoader,
     UnstructuredMarkdownLoader,
+    UnstructuredPowerPointLoader,
+    UnstructuredTSVLoader,
+    UnstructuredWordDocumentLoader,
 )
-import torch
+
+# Define the Chroma settings
+CHROMA_SETTINGS = Settings(
+    anonymized_telemetry=False,
+    is_persistent=True,
+)
+
+DOCUMENT_MAP = {
+    ".pdf": PDFMinerLoader,
+    ".txt": TextLoader,
+    ".csv": CSVLoader,
+    ".html": UnstructuredHTMLLoader,
+    ".tsv": UnstructuredTSVLoader,
+    ".epub": UnstructuredEPubLoader,
+    ".xls": UnstructuredExcelLoader,
+    ".xlsx": UnstructuredExcelLoader,
+    ".pptx": UnstructuredPowerPointLoader,
+    ".ppt": UnstructuredPowerPointLoader,
+    ".docx": UnstructuredWordDocumentLoader,
+    ".doc": UnstructuredWordDocumentLoader,
+    ".md": UnstructuredMarkdownLoader,
+    ".json": JSONLoader,
+}
 
 
 if torch.cuda.is_available():
@@ -23,16 +60,11 @@ else:
 
 SOURCE_DIRECTORY = os.path.join(os.path.dirname(__file__), "source")
 PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "db")
+STRUCTURE_DIRECTORY = os.path.join(os.path.dirname(__file__), "structure.json")
+
 
 # Can be changed to a specific number
 INGEST_THREADS = os.cpu_count() or 8
-
-# Define the Chroma settings
-CHROMA_SETTINGS = Settings(
-    anonymized_telemetry=False,
-    is_persistent=True,
-)
-
 
 CONTEXT_WINDOW_SIZE = 4096
 MAX_NEW_TOKENS = CONTEXT_WINDOW_SIZE
@@ -40,20 +72,6 @@ MAX_NEW_TOKENS = CONTEXT_WINDOW_SIZE
 
 N_GPU_LAYERS = 100  # Llama-2-70B has 83 layers
 N_BATCH = 512
-
-
-DOCUMENT_MAP = {
-    ".txt": TextLoader,
-    ".md": UnstructuredMarkdownLoader,
-    ".py": TextLoader,
-    # ".pdf": PDFMinerLoader,
-    ".pdf": UnstructuredFileLoader,
-    ".csv": CSVLoader,
-    ".xls": UnstructuredExcelLoader,
-    ".xlsx": UnstructuredExcelLoader,
-    ".docx": Docx2txtLoader,
-    ".doc": Docx2txtLoader,
-}
 
 # Default Instructor Model
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L12-v2"
