@@ -6,7 +6,7 @@ import SpeechRecognition, { useSpeechRecognition, } from 'react-speech-recogniti
 import { PiWaveformBold } from "react-icons/pi";
 import { MdStopCircle } from "react-icons/md";
 
-function InputField({ inputValue, setInputValue, handleSubmit, onAttachFile,}) {
+function InputField({ inputValue, setInputValue, handleSubmit, onAttachFile, }) {
   const [isListening, setIsListening] = useState(false);
   const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
   const timeoutId = useRef();
@@ -58,7 +58,7 @@ function InputField({ inputValue, setInputValue, handleSubmit, onAttachFile,}) {
 
   return (
     <div className='rounded-md lg:mx-24 '>
-      
+
       <form className="flex justify-center">
 
         <label htmlFor="chat-input" className="sr-only">
@@ -93,14 +93,18 @@ function InputField({ inputValue, setInputValue, handleSubmit, onAttachFile,}) {
           >
             <TbSend size={24} />
           </button>
-          <button
+
+          {isListening ? <button
+            type="button"
+            className="animate-wave wave absolute inset-y-0 left-0 rounded-lg px-2 py-4 text-sm duration-300 font-medium hover:text-slate-200 dark:text-slate-300 text-slate-900"
+            onClick={handleVoiceInput}
+          > <PiWaveformBold size={26} /> </button> : <button
             type="button"
             className="absolute inset-y-0  bottom-2 left-0 rounded-lg px-2 py-4 text-sm duration-300 font-medium hover:text-[#5841d9] dark:text-slate-300 text-slate-900"
             onClick={handleVoiceInput}
-          >
-            {isListening ? <PiWaveformBold size={24} color='#5841d9' /> : <MdMicNone size={24} />}
-            <span className="sr-only">Use voice input</span>
-          </button>
+          ><MdMicNone size={24} /> </button>}
+          <span className="sr-only">Use voice input</span>
+
         </div>
       </form>
     </div>

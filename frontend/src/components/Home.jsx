@@ -6,7 +6,9 @@ import Modal from './Modal';
 import { FaUser } from "react-icons/fa";
 import owl from '../assets/owl.png';
 import bot from '../assets/bot.png';
-import ReactMarkdown from 'react-markdown';
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
+import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import Markdown from 'react-markdown'
 import gfm from 'remark-gfm';
 import breaks from 'remark-breaks';
 import { BiLike, BiDislike } from "react-icons/bi";
@@ -24,8 +26,10 @@ function Home() {
   const [inputValue, setInputValue] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [botSpeaking, setBotSpeaking] = useState(false);
+  const [botSpeakingIndex, setBotSpeakingIndex] = useState(-1);
   const messagesContainerRef = useRef();
   const [copyToClipBoard, setCopyToClipboard] = useState(false)
+  const [copyToClipBoardIndex, setCopyToClipboardIndex] = useState(-1)
 
   const navigateTo = useNavigate();
   const verify = localStorage.getItem('user_id');
@@ -151,14 +155,16 @@ function Home() {
         lastMessage.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
+
         });
       }
     }
   }, [responses]);
 
 
-  const speak = (text) => {
+  const speak = (text, index) => {
     const utterance = new SpeechSynthesisUtterance(text);
+    setBotSpeakingIndex(index);
     setBotSpeaking(true);
     utterance.rate = 0.75;
     utterance.pitch = 1;
@@ -175,15 +181,17 @@ function Home() {
     };
   };
   const llmParser = (message) => {
-    return  message.replace(/\\n(\d+)|\\n(\s+) /g, '');
+    const markdownText = message.trim().replace(/\\n/g, ' ');
+    return markdownText;
   };
-  
+
   const stopSpeech = () => {
     setBotSpeaking(false);
     window.speechSynthesis.cancel();
   };
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text, index) => {
+    setCopyToClipboardIndex(index)
     setCopyToClipboard(true)
     clipboardCopy(text)
       .then(() => console.log('Copied to clipboard'))
@@ -229,9 +237,10 @@ function Home() {
                           />
 
                           <div className="flex  items-center rounded-xl" ref={messagesContainerRef}>
-                            <ReactMarkdown remarkPlugins={[gfm, breaks]} className='text-slate-900 dark:text-slate-300'>
-                              {(llmParser(response.content))}
-                            </ReactMarkdown>
+                            <Markdown className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-dark">
+                              {llmParser(response.content)}
+                            </Markdown>
+
                           </div>
                         </div>
 
@@ -240,15 +249,15 @@ function Home() {
                             <BiLike size={16} className='text-slate-900 dark:text-slate-300' />
                           </button>
                           <button className=''>
-                            <BiDislike size={16} className='text-slate-900 dark:text-slate-300' />
+                            <BiDislike size={16} className='text-slate-900 dark:text-slate-300'/>
                           </button>
                           {
-                            copyToClipBoard ? <button><BsClipboardCheck className='text-green-500' size={16} /></button> : <button onClick={() => copyToClipboard(response.content)}> <BsClipboard2 size={16} /> </button>
+                            copyToClipBoard && copyToClipBoardIndex === index ? <button><BsClipboardCheck className='text-green-500' size={16} /></button> : <button onClick={() => copyToClipboard(llmParser(response.content), index)}> <BsClipboard2 size={16} /> </button>
                           }
                           {
-                            botSpeaking ? <button className='' onClick={stopSpeech}>
+                            (botSpeaking && botSpeakingIndex === index) ? <button className='' onClick={stopSpeech}>
                               <HiOutlineSpeakerXMark size={16} className='text-slate-900 dark:text-slate-300' />
-                            </button> : <button className='' onClick={() => speak(response.content)}>
+                            </button> : <button className='' onClick={() => speak(llmParser(response.content), index)}>
                               <HiOutlineSpeakerWave size={16} className='text-slate-900 dark:text-slate-300' />
                             </button>
                           }

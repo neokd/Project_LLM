@@ -6,7 +6,11 @@ from vector_builder.detect_changes import detect_changes_class
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from config import (SOURCE_DIRECTORY,STRUCTURE_DIRECTORY,PERSIST_DIRECTORY)
 
+root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
+content_loader_object = content_loader_class()
+
 def create_json_structure(folder_structure_object):
+    print("Watchin SOurce Directory")
     folder_structure=folder_structure_object.create_folder_structure_json(SOURCE_DIRECTORY)
     folder_structure_object.write_json_file(folder_structure,STRUCTURE_DIRECTORY)
     folder_json_data=folder_structure_object.read_json_file(STRUCTURE_DIRECTORY)
@@ -86,13 +90,13 @@ def vector_db_deletion(subfolders):
         client.delete_collection(name=subfolder)
         print(f'{subfolder} collection has been deleted !!!')
 
-if __name__ == "__main__":
-    folder_structure_object = folder_structure_class()
-    content_loader_object = content_loader_class()
-    detect_changes_object = detect_changes_class()
-    root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
+# if __name__ == "__main__":
+#     folder_structure_object = folder_structure_class()
+#     content_loader_object = content_loader_class()
+#     detect_changes_object = detect_changes_class()
+#     root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
 
-    if os.path.exists(STRUCTURE_DIRECTORY):
-        update_json_structure(folder_structure_object,detect_changes_object)
-    else:
-        create_json_structure(folder_structure_object)
+#     if os.path.exists(STRUCTURE_DIRECTORY):
+#         update_json_structure(folder_structure_object,detect_changes_object)
+#     else:
+#         create_json_structure(folder_structure_object)

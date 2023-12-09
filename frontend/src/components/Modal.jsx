@@ -36,7 +36,7 @@ function Modal({ onClose }) {
     files.forEach((file) => {
       formData.append('files', file, file.name);
     });
-
+    formData.append('username',localStorage.getItem('username'))
     try {
       const response = await fetch('http://localhost:8000/api/upload/user_files', {
         method: 'POST',

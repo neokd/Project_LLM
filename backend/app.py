@@ -1,4 +1,4 @@
-from fastapi import FastAPI , status , UploadFile,  Depends 
+from fastapi import FastAPI , status , UploadFile,  Depends , Form
 from fastapi.middleware.cors import CORSMiddleware  
 from pydantic import BaseModel
 from langchain.llms import LlamaCpp
@@ -9,6 +9,8 @@ from config import (
     DEVICE_TYPE,
     MAX_NEW_TOKENS,
     N_GPU_LAYERS,
+    SOURCE_DIRECTORY, 
+    STRUCTURE_DIRECTORY
 )
 from huggingface_hub import hf_hub_download
 from langchain.chains import LLMChain
@@ -26,11 +28,22 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from pydantic import BaseModel
-
+from vector_builder.folder_structure import folder_structure_class
+from vector_builder.db_ingest import content_loader_class
+from vector_builder.detect_changes import detect_changes_class
+from builder import update_json_structure, create_json_structure
+import os
 
 app = FastAPI()
 Base = declarative_base()
 DATABASE_URL = "sqlite:///test.db"
+
+
+folder_structure_object = folder_structure_class()
+detect_changes_object = detect_changes_class()
+root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
+create_json_structure(folder_structure_object)
+
 class UserDB(Base):
     __tablename__ = 'users'
 
@@ -76,7 +89,7 @@ async def register(user: Register):
         existing_user = db.query(UserDB).filter(UserDB.email == user.email).first()
         if existing_user:
             return {"message": "Email already registered", "status": status.HTTP_400_BAD_REQUEST}
-
+        os.mkdir("source/" + str(user.username))
         # If the user does not exist, create a new user in the database
         new_user = UserDB(username = user.username, email=user.email, password=user.password)
         db.add(new_user)
@@ -144,13 +157,21 @@ async def load_model():
     return {"message": "Model loaded", "status": status.HTTP_200_OK}
 
 @app.post("/api/upload/user_files")
-async def upload_user_files(files: List[UploadFile]):
+async def upload_user_files(files: List[UploadFile], username:str = Form(...)):
     # Process each uploaded file
+    # print(username)
+    USER_DIR = "source/" + str(username) + "/"
+    if not os.path.exists(USER_DIR):
+        os.mkdir(USER_DIR)
+
     for file in files:
         contents = await file.read()
-        with open("source/" + file.filename, "wb") as buffer:
+        with open("source/" + str(username) + "/" + file.filename, "wb") as buffer:
             buffer.write(contents)
             buffer.close()
+        
+        if os.path.exists(STRUCTURE_DIRECTORY):
+            update_json_structure(folder_structure_object,detect_changes_object)
 
     return {"message": "Files uploaded", "status": status.HTTP_200_OK}
 

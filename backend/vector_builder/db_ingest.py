@@ -55,11 +55,11 @@ class content_loader_class:
         return docs
 
 
-if __name__ == "__main__":
-    loader = content_loader_class()
-    filepath = [
-                "/home/gladwin/Desktop/Project_LLM/backend/source/user2/about2.txt",
-                "/home/gladwin/Desktop/Project_LLM/backend/source/user2/history.txt"
-            ]
-    docs = loader.load_documents(filepath)
-    print("docs : ", docs)
+# if __name__ == "__main__":
+#     loader = content_loader_class()
+#     filepath = [
+#                 "/home/gladwin/Desktop/Project_LLM/backend/source/user2/about2.txt",
+#                 "/home/gladwin/Desktop/Project_LLM/backend/source/user2/history.txt"
+#             ]
+#     docs = loader.load_documents(filepath)
+#     print("docs : ", docs)
