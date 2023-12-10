@@ -13,6 +13,7 @@ from fastapi import status
 from sse_starlette.sse import EventSourceResponse , ServerSentEvent , ensure_bytes
 from functools import partial
 from langchain.chains.base import Chain
+from langchain.schema.document import Document
 
 
 class Events(str, Enum):
@@ -322,3 +323,36 @@ def model_dump(model: pydantic.BaseModel, **kwargs) -> dict[str, Any]:
         return model.dict(**kwargs)
 
 
+class LangchainEvents(str, Enum):
+    SOURCE_DOCUMENTS = "source_documents"
+
+class SourceDocumentsEventData(BaseModel):
+    """Event data payload for source documents."""
+
+    source_documents: list[dict[str, Any]]
+
+
+class SourceDocumentsStreamingCallbackHandler(StreamingCallbackHandler):
+    """Callback handler for streaming source documents."""
+
+    async def on_chain_end(
+        self, outputs: dict[str, Any], **kwargs: dict[str, Any]
+    ) -> None:
+        """Run when chain ends running."""
+        if "source_documents" in outputs:
+            if not isinstance(outputs["source_documents"], list):
+                raise ValueError("source_documents must be a list")
+            if not isinstance(outputs["source_documents"][0], Document):
+                raise ValueError("source_documents must be a list of Document")
+
+            # NOTE: langchain is using pydantic_v1 for `Document`
+            source_documents: list[dict] = [
+                document.dict() for document in outputs["source_documents"]
+            ]
+            message = self._construct_message(
+                data=model_dump_json(
+                    SourceDocumentsEventData(source_documents=source_documents)
+                ),
+                event=LangchainEvents.SOURCE_DOCUMENTS,
+            )
+            await self.send(message)

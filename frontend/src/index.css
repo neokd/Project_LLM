@@ -5,22 +5,18 @@
 
 @keyframes wave {
     0%, 100% {
-      transform: scale(1);
+      transform: scale(0.9);
     }
     50% {
-      transform: scale(1.2);
+      transform: scale(0.7);
     }
   }
   
   .wave {
-    width: 100px;
-    height: 100px;
-    background-color: #4285f4;
-    border-radius: 50%;
-    margin: 20px;
+    background-color: #5841d9;
   }
   
   .animate-wave {
-    animation: wave 1s infinite ease-in-out;
+    animation: wave 2s infinite ease-in-out;
   }
   

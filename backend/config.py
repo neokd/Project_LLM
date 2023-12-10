@@ -67,14 +67,17 @@ STRUCTURE_DIRECTORY = os.path.join(os.path.dirname(__file__), "structure.json")
 INGEST_THREADS = os.cpu_count() or 8
 
 CONTEXT_WINDOW_SIZE = 4096
-MAX_NEW_TOKENS = CONTEXT_WINDOW_SIZE
+
+MAX_NEW_TOKENS = CONTEXT_WINDOW_SIZE 
+N_GPU_LAYERS = 40
+
+DEFAULT_MEMORY_KEY = 2
 
 
-N_GPU_LAYERS = 100  # Llama-2-70B has 83 layers
 N_BATCH = 512
 
 # Default Instructor Model
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L12-v2"
-MODEL_NAME = "TheBloke/zephyr-7B-beta-GGUF"
-MODEL_FILE = "zephyr-7b-beta.Q4_K_M.gguf"
+MODEL_NAME = os.getenv("MODEL_NAME", "TheBloke/Mistral-7B-Instruct-v0.1-GGUF")
+MODEL_FILE = os.getenv("MODEL_FILE", "mistral-7b-instruct-v0.1.Q4_K_M.gguf")
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "models")
