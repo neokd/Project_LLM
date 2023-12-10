@@ -11,9 +11,9 @@ import gfm from 'remark-gfm';
 import breaks from 'remark-breaks';
 import { BiLike, BiDislike } from "react-icons/bi";
 import { HiOutlineSpeakerWave, HiOutlineSpeakerXMark } from "react-icons/hi2";
-import clipboardCopy from 'clipboard-copy';
+import clipboardCopy from "clipboard-copy";
 import { BsClipboard2, BsClipboardCheck } from "react-icons/bs";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 
 function Home() {
