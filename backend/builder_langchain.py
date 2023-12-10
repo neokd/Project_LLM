@@ -69,25 +69,20 @@ def vector_db_new_creation(content_loader_object,subfolders,files_paths):
         print(f"{list(set(files_added))} are in vector DB")
         print("new Vector DB has been created !!!")
 
-def vector_db_file_creation(content_loader_object,subfolders,files_paths,count=1):
+def vector_db_file_creation(content_loader_object,subfolders,files_paths):
     client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
-    if count:
-        for subfolder in subfolders:
-            document_contents = content_loader_object.load_documents(files_paths[subfolder])
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-            texts = text_splitter.split_documents(document_contents)
-            
-            db = Chroma(collection_name=subfolder, persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings, client=client)
 
-            db.add_documents(texts)           
-
-            print("File document added to vector DB !!!")
+    for subfolder in subfolders:
+        document_contents = content_loader_object.load_documents(files_paths[subfolder])
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        texts = text_splitter.split_documents(document_contents)
         
-    else:
-        for subfolder in subfolders:
-            client.get_or_create_collection(name=subfolder)
-        print('collection is created !!!')
+        db = Chroma(collection_name=subfolder, persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings, client=client)
+
+        db.add_documents(texts)           
+
+        print("File document added to vector DB !!!")
 
     db.persist()
     collection = db.get()
@@ -112,12 +107,12 @@ if __name__ == "__main__":
     detect_changes_object = detect_changes_class()
     root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
 
-    # if os.path.exists(STRUCTURE_DIRECTORY):
-    #     update_json_structure(folder_structure_object,detect_changes_object)
-    # else:
-    #     create_json_structure(folder_structure_object)
+    if os.path.exists(STRUCTURE_DIRECTORY):
+        update_json_structure(folder_structure_object,detect_changes_object)
+    else:
+        create_json_structure(folder_structure_object)
 
-    db=Chroma(collection_name="user", persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings, client=client)
+    db=Chroma(collection_name="glad", persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings, client=client)
     collection = db.get()
     files_added=[metadata['source'] for metadata in collection['metadatas']]
     print(f"{list(set(files_added))} are in vector DB")
