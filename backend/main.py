@@ -148,4 +148,4 @@ async def stream():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, reload=True)
+    uvicorn.run(app, reload=True,log_level="info")
