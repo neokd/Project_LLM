@@ -198,14 +198,14 @@ async def upload_user_files(files: List[UploadFile], username:str = Form(...)):
 
 class ChatInput(BaseModel):
 
-    input: str
+    question: str
 
 
 def chain_factory() -> LLMChain: 
     global llm
     return LLMChain(
         llm = llm,
-        prompt=PromptTemplate.from_template("Give response to user always in one word for the question {input}"),
+        prompt=PromptTemplate.from_template("Give response to user always in one word for the question {question}"),
         )
 
 

@@ -7,7 +7,6 @@ import { FaUser } from "react-icons/fa";
 import owl from '../assets/owl.png';
 import bot from '../assets/bot.png';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import ReactMarkdown from 'react-markdown'
 import Markdown from 'marked-react';
@@ -170,8 +169,7 @@ function Home() {
     setResponses((prev) => [...prev, { type: 'user', content: inputValue }]);
     setInputValue('');
     setLoadingIndex(responses.length)
-    console.log(responses.length)
-    console.log(loadingIndex)
+
     // e.preventDefault();
     setIsLoading(true)
     try {
