@@ -7,6 +7,7 @@ import { FaUser } from "react-icons/fa";
 import owl from '../assets/owl.png';
 import bot from '../assets/bot.png';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import ReactMarkdown from 'react-markdown'
 import Markdown from 'marked-react';
@@ -31,6 +32,8 @@ function Home() {
   const messagesContainerRef = useRef();
   const [copyToClipBoard, setCopyToClipboard] = useState(false)
   const [copyToClipBoardIndex, setCopyToClipboardIndex] = useState(-1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingIndex, setLoadingIndex] = useState(0)
 
   const navigateTo = useNavigate();
   const verify = localStorage.getItem('user_id');
@@ -89,9 +92,9 @@ function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ input: inputValue }),
+        body: JSON.stringify({ question: inputValue }),
       });
-
+      setIsLoading(true)
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let streamedContent = '';
@@ -141,12 +144,102 @@ function Home() {
 
           return updatedResponses;
         });
+        setIsLoading(false)
 
       }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
+
+  const parseStreamData = (data) => {
+    const tokens = data.split('\n')
+      .map(line => {
+        const tokenMatch = line.match(/data:\s*(.+)/);
+        return tokenMatch ? tokenMatch[1] : null;
+      })
+      .filter(token => token !== null);
+    const result = tokens.reduce((acc, token) => acc + token, ' ');
+    return result
+  };
+  
+  
+  const streamAPI = async (e) => {
+    if (inputValue === '') return;
+    e.preventDefault();
+    setResponses((prev) => [...prev, { type: 'user', content: inputValue }]);
+    setInputValue('');
+    setLoadingIndex(responses.length)
+    console.log(responses.length)
+    console.log(loadingIndex)
+    // e.preventDefault();
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/stream", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: inputValue }),
+      });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let streamedContent = '';
+      let lastUserIndex = -1;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        if (streamedContent !== '') {
+          setIsLoading(false)
+        }
+
+        const decodedValue = decoder.decode(value);
+        // console.log(decodedValue)
+        const parsedData = parseStreamData(decodedValue)
+        streamedContent += parsedData;
+
+        // Update the state with responses from the previous stream and the current stream
+
+        setResponses((prev) => {
+          const updatedResponses = [...prev];
+
+          // Find the index of the last user message
+          const newIndex = lastUserIndex = updatedResponses.reduceRight(
+            (index, response, currentIndex) =>
+              index === -1 && response.type === 'user' ? currentIndex : index,
+            -1
+          );
+
+          // If there's a last user message, update the streamed content after it
+          if (lastUserIndex !== -1) {
+            setLoadingIndex(newIndex + 1);
+            const existingStreamedIndex = updatedResponses.findIndex(
+              (response, index) => index > lastUserIndex && response.type === 'streamed'
+            );
+
+            if (existingStreamedIndex !== -1) {
+              // Update the existing streamed message with the accumulated content
+              updatedResponses[existingStreamedIndex].content = streamedContent;
+            } else {
+              // Append a new streamed message after the last user message
+              updatedResponses.splice(lastUserIndex + 1, 0, {
+                type: 'streamed',
+                content: llmParser(streamedContent),
+              });
+            }
+          }
+          return updatedResponses;
+        });
+      }
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+  // streamAPI()
 
   useEffect(() => {
     // Step 2: Scroll to the latest message when messages are updated
@@ -222,15 +315,18 @@ function Home() {
                 {responses.map((response, index) => (
                   <React.Fragment key={index} >
                     {response.type === 'user' && (
-                      <div className='flex flex-row px-2 py-4 sm:px-4 dark:bg-[#151626] shadow-md shadow-slate-400 dark:shadow-slate-700/40 rounded-xl' ref={messagesContainerRef}>
+
+                      <div className='flex flex-row px-2 py-4 sm:px-4 dark:bg-[#151626] shadow-md shadow-slate-400 text-md dark:shadow-slate-700/40 rounded-xl' ref={messagesContainerRef}>
                         <FaUser size={42} className='mr-4 p-2 rounded-full bg-[#5841d9] text-gray-50 dark:bg-white  dark:text-black' />
                         <div className="flex max-w-3xl items-center">
                           <p>{response.content}</p>
                         </div>
                       </div>
                     )}
-                    {response.type === 'streamed' && (
-                      <div className="mb-2 flex flex-col rounded-xl bg-slate-50 px-2 py-6 dark:bg-[#1c1f37] sm:px-4 border-l-2 border-purple-600" >
+
+
+                    {response.type === 'streamed' ? (
+                      <div className="mb-2 flex flex-col rounded-xl bg-slate-50 px-2 py-6 dark:bg-[#1c1f37] sm:px-4 border-l-2 border-purple-600 shadow-md   dark:shadow-slate-700/40" >
 
                         <div className='flex'>
                           <img
@@ -238,12 +334,10 @@ function Home() {
                             src={bot}
                             alt="Streamed"
                           />
-
                           <div className="flex flex-col max-w-5xl rounded-xl" ref={messagesContainerRef}>
-                            <Markdown className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-dark text-start" >
+                            <Markdown className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-dark">
                               {llmParser(response.content)}
                             </Markdown>
-
                           </div>
                         </div>
 
@@ -252,7 +346,8 @@ function Home() {
                             <BiLike size={18} className='text-slate-900 dark:text-slate-300' />
                           </button>
                           <button className=''>
-                            <BiDislike size={18} className='text-slate-900 dark:text-slate-300'/>
+                            <BiDislike size={18} className='text-slate-900 dark:text-slate-300' />
+
                           </button>
                           {
                             copyToClipBoard && copyToClipBoardIndex === index ? <button><BsClipboardCheck className='text-green-500' size={18} /></button> : <button onClick={() => copyToClipboard(llmParser(response.content), index)}> <BsClipboard2 size={18} /> </button>
@@ -266,16 +361,38 @@ function Home() {
                           }
                         </div>
                       </div>
-                    )}
+
+                    ) : isLoading && loadingIndex === index ? (
+                      <div className="mb-2 flex flex-col rounded-xl bg-slate-50 px-2 py-6 dark:bg-[#1c1f37] sm:px-4 border-l-2 border-purple-600" >
+
+                        <div className='flex'>
+                          <img
+                            className="mr-2 flex h-10 w-10 rounded-full sm:mr-4 dark:bg-[#5841d9]"
+                            src={bot}
+                            alt="Streamed"
+                          />
+                          <div className="w-full animate-pulse">
+                            <div className="h-2.5 bg-[#9233e8]/40 rounded-full dark:bg-[#9233e8]/70 w-48 mb-4"></div>
+                            <div className="h-2 bg-[#9233e8]/50 rounded-full dark:bg-[#9233e8]/70 max-w-[480px] mb-2.5"></div>
+                            <div className="h-2 bg-[#9233e8]/50 rounded-full dark:bg-[#9233e8]/70 mb-2.5"></div>
+                            <div className="h-2 bg-[#9233e8]/50 rounded-full dark:bg-[#9233e8]/70 max-w-[440px] mb-2.5"></div>
+                            <div className="h-2 bg-[#9233e8]/50 rounded-full dark:bg-[#9233e8]/70 max-w-[460px] mb-2.5"></div>
+                            <div className="h-2 bg-[#9233e8]/50 rounded-full dark:bg-[#9233e8]/70 max-w-[360px]"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null
+                    }
                   </React.Fragment>
                 ))}
               </div>
 
             </div>
           </div>
-          <InputField inputValue={inputValue} setInputValue={setInputValue} handleSubmit={handleSubmit} onAttachFile={attachFile} />
+          <InputField inputValue={inputValue} setInputValue={setInputValue} handleSubmit={streamAPI} onAttachFile={attachFile} />
         </div>
-        
+
+
         {modal && <Modal onClose={attachFile} />}
       </div>
     </div>

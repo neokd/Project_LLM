@@ -1,10 +1,17 @@
-import React from 'react';
+import { useState } from 'react';
 import { FaAngleLeft, FaAngleRight, FaCircleXmark, FaAlignJustify, FaUser } from "react-icons/fa6";
 import { RiMenu3Fill } from "react-icons/ri";
 import { IoLogOutOutline } from "react-icons/io5";
 import { FaUserGear } from "react-icons/fa6";
 
 function Sidebar({ isOpen, onToggle }) {
+
+    const [isChecked, setIsChecked] = useState(false)
+
+    const handleCheckboxChange = () => {
+        setIsChecked(!isChecked)
+    }
+
     const logOutUser = () => {
         localStorage.removeItem('username')
         localStorage.removeItem('user_id')
@@ -73,6 +80,23 @@ function Sidebar({ isOpen, onToggle }) {
                             <h1 className='text-lg dark:text-white'></h1>
                         </div> */}
                     </div>
+                    <div className='flex flex-row items-center justify-start gap-x-4 mx-3 mb-3 mt-2'>
+                        <button
+                            className={`flex cursor-pointer select-none items-center ${isChecked ? 'text-white' : 'text-[#5741d9]'} bg-transparent outline-none focus:outline-none`}
+                            onClick={handleCheckboxChange}>
+                            <div className='relative'>
+                                <div
+                                    className={`box block h-8 w-14 rounded-full ${isChecked ? 'bg-[#5741d9]' : 'outline outline-voilet-500'}`}
+                                ></div>
+
+                                <div
+                                    className={`absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white transition ${isChecked ? 'translate-x-full' : 'bg-violet-500'
+                                        }`}
+                                ></div>
+                            </div>
+                        </button>
+                        <h1 className='text-lg dark:text-slate-200'>View Souce</h1>
+                    </div>
                     <button className="flex w-full gap-x-4 rounded-lg  p-4 text-left text-md font-medium  transition-colors duration-200 focus:outline-none dark:border-slate-700 dark:text-slate-200 dark:hover:text-purple-500" ><FaUserGear size={20} />Custom Instruction</button>
                     <button className="flex w-full gap-x-4 rounded-lg  p-4 text-left text-md font-medium  transition-colors duration-200 focus:outline-none dark:border-slate-700 dark:text-slate-200 dark:hover:text-purple-500" onClick={logOutUser}><IoLogOutOutline size={20} /> Logout</button>
                 </div>
@@ -82,7 +106,9 @@ function Sidebar({ isOpen, onToggle }) {
 
             {
                 isOpen ? (
-                    <button className={`absolute md:block hidden md:top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-gray-300 duration-300 ${isOpen ? 'left-52 lg:left-[16.5rem]' : 'left-2'} `} onClick={onToggle}>
+
+                    <button className={`absolute md:block hidden md:top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-gray-300/70 duration-300 ${isOpen ? 'left-52 lg:left-[16.5rem]' : 'left-2'} `} onClick={onToggle}>
+
                         <FaAngleLeft />
                     </button>
                 ) : (

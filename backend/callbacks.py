@@ -14,6 +14,10 @@ from sse_starlette.sse import EventSourceResponse , ServerSentEvent , ensure_byt
 from functools import partial
 from langchain.chains.base import Chain
 from langchain.schema.document import Document
+from langchain.callbacks.base import BaseCallbackHandler
+from typing import Any, Callable, Generator, Optional
+from threading import Thread
+from queue import Queue, Empty
 
 
 class Events(str, Enum):
@@ -27,6 +31,14 @@ class TokenStreamMode(str, Enum):
 
 class TokenEventData(BaseModel):
     token: str = ""
+
+class StrEnum(str, Enum):
+    ...
+class ChainRunMode(StrEnum):
+    """Enum for LangChain run modes."""
+
+    ASYNC = "async"
+    SYNC = "sync"
 
 
 def model_dump_json(model: pydantic.BaseModel, **kwargs) -> str:
@@ -215,6 +227,7 @@ class _StreamingResponse(EventSourceResponse):
         try:
             async for data in self.body_iterator:
                 chunk = ensure_bytes(data, self.sep)
+
                 await send(
                     {"type": "http.response.body", "body": chunk, "more_body": True}
                 )
@@ -356,3 +369,42 @@ class SourceDocumentsStreamingCallbackHandler(StreamingCallbackHandler):
                 event=LangchainEvents.SOURCE_DOCUMENTS,
             )
             await self.send(message)
+
+
+
+
+
+class QueueCallbackHandler(BaseCallbackHandler):
+    def __init__(self, queue):
+        self.queue = queue
+
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        self.queue.put(
+            {
+                "event": "event",
+                "data": token,
+            }
+        )
+
+    def on_llm_end(self, *args, **kwargs) -> Any:
+        return self.queue.empty()
+
+def stream(cb: Any, queue: Queue) -> Generator:
+    job_done = object()
+
+    def task():
+        cb()
+        queue.put(job_done)
+
+    t = Thread(target=task)
+    t.start()
+
+    while True:
+        try:
+            item = queue.get(True, timeout=1)
+            if item is job_done:
+                t.join()  # Wait for the thread to finish
+                break
+            yield item
+        except Empty:
+            continue

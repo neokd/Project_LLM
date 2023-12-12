@@ -10,15 +10,21 @@ from config import (
     MAX_NEW_TOKENS,
     N_GPU_LAYERS,
     SOURCE_DIRECTORY, 
-    STRUCTURE_DIRECTORY
+    STRUCTURE_DIRECTORY,
+    PERSIST_DIRECTORY,
+    EMBEDDING_MODEL_NAME
 )
+
+
 from huggingface_hub import hf_hub_download
-from langchain.chains import LLMChain, RetrievalQA
+from langchain.chains import LLMChain, RetrievalQA, ConversationalRetrievalChain
+
 from langchain.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.callbacks.manager import CallbackManager
 from typing import List
-from callbacks import StreamingResponse, TokenStreamingCallbackHandler, SourceDocumentsStreamingCallbackHandler
+from callbacks import StreamingResponse, TokenStreamingCallbackHandler, SourceDocumentsStreamingCallbackHandler, QueueCallbackHandler, stream
+
 from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from databases import Database
@@ -31,9 +37,16 @@ from pydantic import BaseModel
 from vector_builder.folder_structure import folder_structure_class
 from vector_builder.db_ingest import content_loader_class
 from vector_builder.detect_changes import detect_changes_class
-from builder import update_json_structure, create_json_structure
 from langchain.vectorstores.chroma import Chroma
 import os
+from builder_langchain import update_json_structure, create_json_structure
+from langchain.vectorstores.chroma import Chroma
+import os
+import chromadb
+from langchain.embeddings import HuggingFaceEmbeddings
+from queue import Queue
+from sse_starlette.sse import EventSourceResponse
+
 
 app = FastAPI()
 Base = declarative_base()
@@ -43,7 +56,12 @@ DATABASE_URL = "sqlite:///test.db"
 folder_structure_object = folder_structure_class()
 detect_changes_object = detect_changes_class()
 root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
-# create_json_structure(folder_structure_object)
+
+create_json_structure(folder_structure_object)
+client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
+embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
+db=Chroma(collection_name="central_db", persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings, client=client)
+
 
 class UserDB(Base):
     __tablename__ = 'users'
@@ -171,12 +189,15 @@ async def upload_user_files(files: List[UploadFile], username:str = Form(...)):
             buffer.write(contents)
             buffer.close()
         
-        # if os.path.exists(STRUCTURE_DIRECTORY):
-        #     update_json_structure(folder_structure_object,detect_changes_object)
+
+        if os.path.exists(STRUCTURE_DIRECTORY):
+            update_json_structure(folder_structure_object,detect_changes_object)
+
 
     return {"message": "Files uploaded", "status": status.HTTP_200_OK}
 
 class ChatInput(BaseModel):
+
     input: str
 
 
@@ -185,11 +206,25 @@ def chain_factory() -> LLMChain:
     return LLMChain(
         llm = llm,
         prompt=PromptTemplate.from_template("Give response to user always in one word for the question {input}"),
+        )
+
+
+prompt = PromptTemplate.from_template("""
+       Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+        Question: {question}
+        Helpful Answer:
+        """,)   
+
+def chain_factory() -> LLMChain: 
+    global llm,db
+    return LLMChain(
+        llm=llm,
+        prompt=prompt,
     )
 
 @app.post("/api/chat")
 async def chat(request: ChatInput, chain: LLMChain = Depends(chain_factory)):
-    print(request.input)
+
     return StreamingResponse(
         chain=chain,
         config={
@@ -200,3 +235,42 @@ async def chat(request: ChatInput, chain: LLMChain = Depends(chain_factory)):
             ],
         },
     )
+
+
+def create_llm_chain(user_question, contexts, output_queue):
+    global llm
+    llm_chain = LLMChain(
+        llm=llm,
+        prompt=PromptTemplate.from_template(
+            """You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
+            Question: {question} 
+            Context: {context} 
+            Answer:"""
+        )
+    )
+    def cb():
+        llm_chain(
+            {
+                "question": user_question, 
+                "context": contexts
+            },
+            callbacks=[QueueCallbackHandler(queue=output_queue)],
+        )
+
+    return cb
+
+@app.post("/api/stream")
+async def streaming(request: ChatInput):
+    context = db.similarity_search(request.question)
+    output_queue = Queue()
+    llm_cb = create_llm_chain(request.question, context, output_queue)
+    return EventSourceResponse(stream(llm_cb, output_queue), media_type="text/event-stream")
+
+@app.get("/api/suggest")
+async def suggest():
+    with open("./bagofwords.txt", "r") as buffer:
+        words = buffer.read().split('\n')
+    words = list(filter(None, words))
+    word_list = [{"id": idx, "word": word} for idx, word in enumerate(words)]
+    return {"message": word_list, "status": status.HTTP_200_OK}
+
