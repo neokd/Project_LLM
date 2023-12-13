@@ -12,16 +12,18 @@ from config import (SOURCE_DIRECTORY,STRUCTURE_DIRECTORY,PERSIST_DIRECTORY,EMBED
 root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
 content_loader_object = content_loader_class()
 
-def create_json_structure(folder_structure_object):
-    
-    folder_structure=folder_structure_object.create_folder_structure_json(SOURCE_DIRECTORY)
-    folder_structure_object.write_json_file(folder_structure,STRUCTURE_DIRECTORY)
-    folder_json_data=folder_structure_object.read_json_file(STRUCTURE_DIRECTORY)
-    subfolders, files_paths = folder_structure_object.extract_subfolder_and_files(folder_json_data[root_directory])
+def create_json_structure(folder_structure_object,detect_changes_object):
+    if os.path.exists(STRUCTURE_DIRECTORY):
+        update_json_structure(folder_structure_object,detect_changes_object)
+    else:
+        folder_structure=folder_structure_object.create_folder_structure_json(SOURCE_DIRECTORY)
+        folder_structure_object.write_json_file(folder_structure,STRUCTURE_DIRECTORY)
+        folder_json_data=folder_structure_object.read_json_file(STRUCTURE_DIRECTORY)
+        subfolders, files_paths = folder_structure_object.extract_subfolder_and_files(folder_json_data[root_directory])
 
-    vector_db_new_creation(content_loader_object,subfolders,files_paths)
-    print("Json structure is created with necessary files")
-    return None
+        vector_db_new_creation(content_loader_object,subfolders,files_paths)
+        print("Json structure is created with necessary files")
+        return None
 
 def update_json_structure(folder_structure_object,detect_changes_object):
     previous_json_structure = folder_structure_object.read_json_file(STRUCTURE_DIRECTORY)
@@ -110,6 +112,7 @@ def vector_db_deletion(subfolders):
 # if __name__ == "__main__":
 #     client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
 #     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
+
 #     folder_structure_object = folder_structure_class()
 #     content_loader_object = content_loader_class()
 #     detect_changes_object = detect_changes_class()

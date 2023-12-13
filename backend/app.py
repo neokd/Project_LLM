@@ -57,7 +57,7 @@ folder_structure_object = folder_structure_class()
 detect_changes_object = detect_changes_class()
 root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
 
-create_json_structure(folder_structure_object)
+create_json_structure(folder_structure_object,detect_changes_object)
 client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
 embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
 db=Chroma(collection_name="central_db", persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings, client=client)
