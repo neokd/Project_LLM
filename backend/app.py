@@ -262,6 +262,7 @@ def create_llm_chain(user_question, contexts, output_queue):
 @app.post("/api/stream")
 async def streaming(request: ChatInput):
     context = db.similarity_search(request.question)
+    print(context)
     output_queue = Queue()
     llm_cb = create_llm_chain(request.question, context, output_queue)
     return EventSourceResponse(stream(llm_cb, output_queue), media_type="text/event-stream")

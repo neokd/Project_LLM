@@ -333,9 +333,9 @@ function Home() {
                             alt="Streamed"
                           />
                           <div className="flex flex-col max-w-5xl rounded-xl" ref={messagesContainerRef}>
-                            <Markdown className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-dark">
+                            <ReactMarkdown className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-dark">
                               {llmParser(response.content)}
-                            </Markdown>
+                            </ReactMarkdown>
                           </div>
                         </div>
 
