@@ -196,45 +196,42 @@ async def upload_user_files(files: List[UploadFile], username:str = Form(...)):
 
     return {"message": "Files uploaded", "status": status.HTTP_200_OK}
 
-class ChatInput(BaseModel):
 
-    question: str
+###### /api/chat API  ######
 
-
-def chain_factory() -> LLMChain: 
-    global llm
-    return LLMChain(
-        llm = llm,
-        prompt=PromptTemplate.from_template("Give response to user always in one word for the question {question}"),
+def chain_factory() -> RetrievalQA:
+    try:
+        return RetrievalQA.from_chain_type(
+            llm,
+            retriever=db.as_retriever(search_kwargs={"k": 2}),
+            return_source_documents=True,
         )
+    except Exception as e:
+        print(e)
 
-
-prompt = PromptTemplate.from_template("""
-       Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
-        Question: {question}
-        Helpful Answer:
-        """,)   
-
-def chain_factory() -> LLMChain: 
-    global llm,db
-    return LLMChain(
-        llm=llm,
-        prompt=prompt,
-    )
+class RetrievalQAInput(BaseModel):
+    query: str
+    # question: str
 
 @app.post("/api/chat")
-async def chat(request: ChatInput, chain: LLMChain = Depends(chain_factory)):
-
+async def chat(request: RetrievalQAInput, chain: RetrievalQA = Depends(chain_factory)):
+    print(request.query)
     return StreamingResponse(
         chain=chain,
         config={
             "inputs": request.model_dump(),
             "callbacks": [
                 TokenStreamingCallbackHandler(output_key=chain.output_key),
-                # SourceDocumentsStreamingCallbackHandler()
+                SourceDocumentsStreamingCallbackHandler(),
             ],
         },
+        run_mode="sync",
     )
+
+
+###### /api/stream API for streaming responses ######
+class ChatInput(BaseModel):
+    question: str
 
 
 def create_llm_chain(user_question, contexts, output_queue):
@@ -266,6 +263,7 @@ async def streaming(request: ChatInput):
     output_queue = Queue()
     llm_cb = create_llm_chain(request.question, context, output_queue)
     return EventSourceResponse(stream(llm_cb, output_queue), media_type="text/event-stream")
+
 
 @app.get("/api/suggest")
 async def suggest():

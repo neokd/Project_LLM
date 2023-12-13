@@ -4,7 +4,7 @@ import { RiMenu3Fill } from "react-icons/ri";
 import { IoLogOutOutline } from "react-icons/io5";
 import { FaUserGear } from "react-icons/fa6";
 
-function Sidebar({ isOpen, onToggle }) {
+function Sidebar({ isOpen, onToggle, toggleSourceDocuments }) {
 
     const [isChecked, setIsChecked] = useState(false)
 
@@ -83,7 +83,10 @@ function Sidebar({ isOpen, onToggle }) {
                     <div className='flex flex-row items-center justify-start gap-x-4 mx-3 mb-3 mt-2'>
                         <button
                             className={`flex cursor-pointer select-none items-center ${isChecked ? 'text-white' : 'text-[#5741d9]'} bg-transparent outline-none focus:outline-none`}
-                            onClick={handleCheckboxChange}>
+                            onClick={() => {
+                                handleCheckboxChange()
+                                toggleSourceDocuments()
+                            }}>
                             <div className='relative'>
                                 <div
                                     className={`box block h-8 w-14 rounded-full ${isChecked ? 'bg-[#5741d9]' : 'outline outline-voilet-500'}`}
