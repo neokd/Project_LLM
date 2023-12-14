@@ -306,10 +306,11 @@ function Home() {
     };
   };
   const llmParser = (message) => {
-    const markdownText = message.trim().replace(/\\n(\d|[a-zA-Z])/g, '\n $1');
-
+    const codeBlockMoved = message.replace(/\\n(```[^`]+```)/g, '\n\n$1');
+    const markdownText = codeBlockMoved.replace(/\\n(\d|[a-zA-Z])/g, '\n $1');
     return markdownText;
   };
+  
 
   const stopSpeech = () => {
     setBotSpeaking(false);
