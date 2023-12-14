@@ -1,2 +1,4 @@
 backend/models/*
 ./backend/test.db
+backend/db/*
+backend/structure.json

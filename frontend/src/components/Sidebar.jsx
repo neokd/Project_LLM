@@ -4,7 +4,10 @@ import { RiMenu3Fill } from "react-icons/ri";
 import { IoLogOutOutline } from "react-icons/io5";
 import { FaUserGear } from "react-icons/fa6";
 
-function Sidebar({ isOpen, onToggle, toggleSourceDocuments }) {
+
+
+function Sidebar({ isOpen, onToggle, toggleSourceDocuments, togglePrompt }) {
+
 
     const [isChecked, setIsChecked] = useState(false)
 
@@ -100,7 +103,10 @@ function Sidebar({ isOpen, onToggle, toggleSourceDocuments }) {
                         </button>
                         <h1 className='text-lg dark:text-slate-200'>View Souce</h1>
                     </div>
-                    <button className="flex w-full gap-x-4 rounded-lg  p-4 text-left text-md font-medium  transition-colors duration-200 focus:outline-none dark:border-slate-700 dark:text-slate-200 dark:hover:text-purple-500" ><FaUserGear size={20} />Custom Instruction</button>
+
+
+                    <button className="flex w-full gap-x-4 rounded-lg  p-4 text-left text-md font-medium  transition-colors duration-200 focutoggleCustomPrompts:outline-none dark:border-slate-700 dark:text-slate-200 dark:hover:text-purple-500" onClick={togglePrompt} ><FaUserGear size={20} />Custom Instruction</button>
+
                     <button className="flex w-full gap-x-4 rounded-lg  p-4 text-left text-md font-medium  transition-colors duration-200 focus:outline-none dark:border-slate-700 dark:text-slate-200 dark:hover:text-purple-500" onClick={logOutUser}><IoLogOutOutline size={20} /> Logout</button>
                 </div>
             </aside>
