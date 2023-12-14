@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import InputField from './InputField';
-import Modal from './Modal';
+import UploadModal from './Modal/UploadModal';
+import PromptModal from './Modal/PromptModal';
 import { FaUser } from "react-icons/fa";
 import owl from '../assets/owl.png';
 import bot from '../assets/bot.png';
@@ -35,6 +36,8 @@ function Home() {
   const [loadingIndex, setLoadingIndex] = useState(0)
   const [showSourceDocuments, setShowSourceDocuments] = useState(false)
   const [sourceDocuments, setSourceDocuments] = useState([]);
+  const [promptModal,setPromptModal] = useState(false)
+
 
   const navigateTo = useNavigate();
   const verify = localStorage.getItem('user_id');
@@ -53,6 +56,12 @@ function Home() {
   const attachFile = () => {
     setModal(!modal);
   };
+
+
+  const toggleCustomPrompt = () => {
+    setPromptModal(!promptModal);
+  };
+
 
   const handleShowSourceDocuments = () => {
     setShowSourceDocuments(!showSourceDocuments)
@@ -331,7 +340,11 @@ function Home() {
   return (
     <div className="flex flex-col md:flex-row h-screen bg-slate-200 dark:bg-[#151626] ">
       {/* Sidebar */}
+
       <Sidebar isOpen={isSidebarOpen} onToggle={() => setSidebarOpen(!isSidebarOpen)} toggleSourceDocuments={handleShowSourceDocuments} />
+
+      <Sidebar isOpen={isSidebarOpen} onToggle={() => setSidebarOpen(!isSidebarOpen)} toggleSourceDocuments={handleShowSourceDocuments} togglePrompt={toggleCustomPrompt} />
+
 
       {/* Content */}
       <div className={`flex-1 flex flex-col items-center justify-center overflow-hidden transition-all ease-in-out overflow-y-auto ${isSidebarOpen ? 'md:ml-64' : 'ml-0'}`}>
@@ -435,11 +448,18 @@ function Home() {
                 ))}
               </div>
 
+
+
             </div>
           </div>
           <InputField inputValue={inputValue} setInputValue={setInputValue} handleSubmit={handleSubmit} onAttachFile={attachFile} />
         </div>
+
         {modal && <Modal onClose={attachFile} />}
+
+        {modal && <UploadModal onClose={attachFile} />}
+        { promptModal && <PromptModal onClose={toggleCustomPrompt} />}
+
       </div>
     </div>
 

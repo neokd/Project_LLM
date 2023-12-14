@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { IoMdClose } from "react-icons/io";
 import { FaRegFilePdf, FaRegFileWord } from "react-icons/fa6";
 import { IoIosDocument } from "react-icons/io";
-import Alert from './Alert';
+import Alert from '../Alert';
 
-function Modal({ onClose }) {
+function UploadModal({ onClose }) {
   const [files, setFiles] = useState([]);
 
   function getFileTypeIcon(fileType) {
@@ -156,4 +156,4 @@ function Modal({ onClose }) {
   );
 }
 
-export default Modal;
+export default UploadModal;
