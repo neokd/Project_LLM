@@ -1,8 +1,21 @@
-
+from langchain.prompts import PromptTemplate
 PROMPTS = {
-    "default": "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.Question: {question} Context: {context} Answer:"
+    "default": """You are a NTRO(National Technical Research Organization) Assistant , who will do multiple tasks such as summarization , when you are provided with a plenty of data you have to summarise it crisp and sharp  without loosing the actual content of the  data . When any question is asked to you from the data respond accurately . When you don't find any answer from the data provided , Respond  the user asking  for more content relevant to the question . Most importantly ensure the grammar and spelling in the responses are always correct . Rephrase or reframe the sentences when required . Summarize the NEWS papers headlines and  provide editorial pages for quick overview of specific topics. Always keep your responses crisp and clear.Question: {question} Context: {context} """
 }
 
 def get_prompt(prompt_key="default"):
-    return PROMPTS.get(prompt_key, None)
+    INSTRUCTION_TEMLATE = """
+        Context: {context}
+        User: {question}
+    """
+    INSTRUCTION_BEGIN, INSTRUCTION_END = "[INST]", "[/INST]"
+    SYSTEM_BEGIN, SYSTEM_END = "[SYS]", "[/SYS]"
+
+    SYSTEM_PROMPT = PROMPTS.get(prompt_key, None)
+    prompt_template = INSTRUCTION_BEGIN + SYSTEM_PROMPT + INSTRUCTION_TEMLATE + INSTRUCTION_END
+
+    prompt = PromptTemplate(
+        input_variables=["context", "question"], template=prompt_template
+    )
+    return prompt
 

@@ -24,7 +24,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.callbacks.manager import CallbackManager
 from typing import List
 from callbacks import StreamingResponse, TokenStreamingCallbackHandler, SourceDocumentsStreamingCallbackHandler, QueueCallbackHandler, stream
-
+from prompt import get_prompt
 from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from databases import Database
@@ -204,7 +204,11 @@ def chain_factory() -> RetrievalQA:
         return RetrievalQA.from_chain_type(
             llm,
             retriever=db.as_retriever(search_kwargs={"k": 2}),
+            chain_type="stuff",
             return_source_documents=True,
+            chain_type_kwargs={
+                "prompt": get_prompt()
+            }
         )
     except Exception as e:
         print(e)

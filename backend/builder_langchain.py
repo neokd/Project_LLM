@@ -109,19 +109,19 @@ def vector_db_deletion(subfolders):
 
         print(f'{subfolder} collection has been deleted !!!')
 
-# if __name__ == "__main__":
-#     client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
-#     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
+if __name__ == "__main__":
+    client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
 
-#     folder_structure_object = folder_structure_class()
-#     content_loader_object = content_loader_class()
-#     detect_changes_object = detect_changes_class()
-#     root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
+    folder_structure_object = folder_structure_class()
+    content_loader_object = content_loader_class()
+    detect_changes_object = detect_changes_class()
+    root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
 
-#     if os.path.exists(STRUCTURE_DIRECTORY):
-#         update_json_structure(folder_structure_object,detect_changes_object)
-#     else:
-#         create_json_structure(folder_structure_object)
+    if os.path.exists(STRUCTURE_DIRECTORY):
+        update_json_structure(folder_structure_object,detect_changes_object)
+    else:
+        create_json_structure(folder_structure_object,detect_changes_object)
 
 #     db=Chroma(collection_name="user", persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings, client=client)
 #     collection = db.get()

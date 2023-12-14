@@ -315,10 +315,16 @@ function Home() {
     };
   };
   const llmParser = (message) => {
+    // Move code blocks to the next line
     const codeBlockMoved = message.replace(/\\n(```[^`]+```)/g, '\n\n$1');
-    const markdownText = codeBlockMoved.replace(/\\n(\d|[a-zA-Z])/g, '\n $1');
+  
+    // If it's a list, move the digit to the next line
+    // const markdownText = codeBlockMoved.replace(/\\n(\d|[a-zA-Z])/g, '\n$1');
+    const markdownText = codeBlockMoved.replace(/\\n(\d+\.[^\n]+|[a-zA-Z]\.[^\n]+)/g, '\n$1');
+  
     return markdownText;
   };
+  
   
 
   const stopSpeech = () => {
