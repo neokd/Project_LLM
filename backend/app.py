@@ -24,7 +24,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.callbacks.manager import CallbackManager
 from typing import List
 from callbacks import StreamingResponse, TokenStreamingCallbackHandler, SourceDocumentsStreamingCallbackHandler, QueueCallbackHandler, stream
-from prompt import get_prompt
+from prompt import get_prompt, PROMPTS
 from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from databases import Database
@@ -198,7 +198,7 @@ async def upload_user_files(files: List[UploadFile], username:str = Form(...)):
 
 
 ###### /api/chat API  ######
-
+prompt, memory = get_prompt()
 def chain_factory() -> RetrievalQA:
     try:
         return RetrievalQA.from_chain_type(
@@ -207,7 +207,8 @@ def chain_factory() -> RetrievalQA:
             chain_type="stuff",
             return_source_documents=True,
             chain_type_kwargs={
-                "prompt": get_prompt()
+                "prompt": prompt,
+                "memory": memory,
             }
         )
     except Exception as e:
@@ -268,7 +269,7 @@ async def streaming(request: ChatInput):
     llm_cb = create_llm_chain(request.question, context, output_queue)
     return EventSourceResponse(stream(llm_cb, output_queue), media_type="text/event-stream")
 
-
+# ###### user input suggestions ######
 @app.get("/api/suggest")
 async def suggest():
     with open("./bagofwords.txt", "r") as buffer:
@@ -277,3 +278,18 @@ async def suggest():
     word_list = [{"id": idx, "word": word} for idx, word in enumerate(words)]
     return {"message": word_list, "status": status.HTTP_200_OK}
 
+###### /api/prompt API  ######
+class CustomPrompt(BaseModel):
+    prompt: str
+
+@app.post("/api/prompt")
+async def add_prompt(request: CustomPrompt):
+    prompt.template += request.prompt
+    INSTRUCTION_TEMLATE = """
+        Context: {history} \n {context}
+        User: {question}
+    """
+    INSTRUCTION_BEGIN, INSTRUCTION_END = "[INST]", "[/INST]"
+    SYSTEM_BEGIN, SYSTEM_END = "[SYS]", "[/SYS]"
+    prompt.template = INSTRUCTION_BEGIN + request.prompt + INSTRUCTION_TEMLATE + INSTRUCTION_END
+    return {"message": prompt.template, "status": status.HTTP_200_OK}

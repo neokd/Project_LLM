@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import InputField from './InputField';
-import UploadModal from './Modal/UploadModal';
-import PromptModal from './Modal/PromptModal';
+import UploadModal from './modal/UploadModal';
+import PromptModal from './modal/PromptModal';
 import { FaUser } from "react-icons/fa";
 import owl from '../assets/owl.png';
 import bot from '../assets/bot.png';
@@ -18,6 +18,7 @@ import { HiOutlineSpeakerWave, HiOutlineSpeakerXMark } from "react-icons/hi2";
 import clipboardCopy from "clipboard-copy";
 import { BsClipboard2, BsClipboardCheck } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
+import Alert from './Alert';
 
 
 function Home() {
@@ -36,7 +37,8 @@ function Home() {
   const [loadingIndex, setLoadingIndex] = useState(0)
   const [showSourceDocuments, setShowSourceDocuments] = useState(false)
   const [sourceDocuments, setSourceDocuments] = useState([]);
-  const [promptModal,setPromptModal] = useState(false)
+  const [promptModal, setPromptModal] = useState(false)
+  const [promptAlert, setPromptAlert] = useState(false)
 
 
   const navigateTo = useNavigate();
@@ -55,11 +57,13 @@ function Home() {
   }, []);
   const attachFile = () => {
     setModal(!modal);
+    if (modal === true) setShowAlert(true)
   };
 
 
   const toggleCustomPrompt = () => {
     setPromptModal(!promptModal);
+    if (promptModal === true) setPromptAlert(true)
   };
 
 
@@ -307,7 +311,7 @@ function Home() {
     // voices.forEach((voice, index) => {
     //   console.log(`Voice ${index + 1}: ${voice.name} (${voice.lang})`);
     // });
-    const preferredVoice = voices.find(voice => voice.name === 'Aaron');
+    const preferredVoice = voices.find(voice => voice.name === 'Samantha');
     utterance.voice = preferredVoice
     window.speechSynthesis.speak(utterance);
     utterance.onend = () => {
@@ -317,15 +321,14 @@ function Home() {
   const llmParser = (message) => {
     // Move code blocks to the next line
     const codeBlockMoved = message.replace(/\\n(```[^`]+```)/g, '\n\n$1');
-  
-    // If it's a list, move the digit to the next line
-    // const markdownText = codeBlockMoved.replace(/\\n(\d|[a-zA-Z])/g, '\n$1');
-    const markdownText = codeBlockMoved.replace(/\\n(\d+\.[^\n]+|[a-zA-Z]\.[^\n]+)/g, '\n$1');
-  
+
+    const markdownText = codeBlockMoved.replace(/\\n(\d|[a-zA-Z])|\\n\\n|(\d|[a-zA-Z])\n/g, '\n\n $1 ');
+    // const markdownText = codeBlockMoved.replace(/\\n(\d+\.[^\n]+|[a-zA-Z]\.[^\n]+)/g, '\n$1');
+
     return markdownText;
   };
-  
-  
+
+
 
   const stopSpeech = () => {
     setBotSpeaking(false);
@@ -354,11 +357,11 @@ function Home() {
 
 
       {/* Content */}
-      <div className={`flex-1 flex flex-col items-center justify-center overflow-hidden transition-all ease-in-out overflow-y-auto ${isSidebarOpen ? 'md:ml-64' : 'ml-0'}`}>
+      <div className={`flex-1 flex flex-col items-center justify-center overflow-hidden transition-all ease-in-out overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-[#151626] scrollbar-track-rounded-full scrollbar-thumb-rounded-full ${isSidebarOpen ? 'md:ml-64' : 'ml-0'}`}>
         <Navbar />
         <div className="container mx-auto lg:w-3/5 w-full">
 
-          <div className="flex h-[94vh] w-full flex-col">
+          <div className="flex h-[93vh] w-full flex-col">
             {/* Prompt Messages */}
             <div className="flex-1 rounded-xl p-4 leading-6 text-slate-900 dark:text-slate-300 sm:text-base sm:leading-7 pb-32">
               <div className='lg:space-y-8 text-md '>
@@ -368,7 +371,7 @@ function Home() {
 
                       <div className='flex flex-row px-2 py-4 sm:px-4 dark:bg-[#151626] shadow-md shadow-slate-400 text-md dark:shadow-slate-700/40 rounded-xl' ref={messagesContainerRef}>
                         <FaUser size={42} className='mr-4 p-2 rounded-full bg-[#5841d9] text-gray-50 dark:bg-white  dark:text-black' />
-                        <div className="flex max-w-3xl items-center text-lg">
+                        <div className="flex max-w-5xl items-center text-lg">
                           <p>{response.content}</p>
                         </div>
                       </div>
@@ -386,14 +389,14 @@ function Home() {
                               src={bot}
                               alt="Streamed"
                             />
-                            <div className="flex flex-col max-w-7xl rounded-xl" ref={messagesContainerRef}>
+                            <div className="flex flex-col max-w-5xl rounded-xl" ref={messagesContainerRef}>
                               <ReactMarkdown className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-dark text-lg">
                                 {llmParser(response.content)}
                               </ReactMarkdown>
                             </div>
                           </div>
 
-                          <div className='flex flex-row justify-end gap-2 mr-2 '>
+                          <div className='flex flex-row justify-end gap-2 mr-2 mt-3 '>
                             <button className=''>
                               <BiLike size={18} className='text-slate-900 dark:text-slate-300' />
                             </button>
@@ -414,10 +417,10 @@ function Home() {
                           </div>
                         </div>
                         {sourceDocuments.length > 0 && showSourceDocuments && (
-                          <div className="mt-4 p-4 grid grid-cols-2 rounded-xl gap-4">
+                          <div className=" p-4 grid grid-cols-2 rounded-xl gap-x-4">
                             {sourceDocuments.map((document, docIndex) => (
                               index === loadingIndex && (
-                                <div className="mb-2 flex flex-col rounded-xl bg-slate-50 px-2 py-6 dark:bg-[#1c1f37] sm:px-4 border-l-2 border-purple-600 shadow-md dark:shadow-slate-700/40" key={docIndex}>
+                                <div className=" flex flex-col rounded-xl bg-slate-50 px-2 py-6 dark:bg-[#1c1f37] sm:px-4 border-l-2 border-purple-600 shadow-md dark:shadow-slate-700/40" key={docIndex}>
                                   <h1 className='font-bold text-lg'>Citation {docIndex + 1}</h1>
                                   <button className='text-start' onClick={() => window.open(document['metadata'].source, '_blank')}>
                                     <h1 className='text-lg dark:text-slate-200 line-clamp-2 mt-2'>{document.page_content}</h1>
@@ -462,10 +465,30 @@ function Home() {
           <InputField inputValue={inputValue} setInputValue={setInputValue} handleSubmit={handleSubmit} onAttachFile={attachFile} />
         </div>
 
-        {modal && <Modal onClose={attachFile} />}
+        {/* {modal && <Modal onClose={attachFile} />} */}
 
         {modal && <UploadModal onClose={attachFile} />}
-        { promptModal && <PromptModal onClose={toggleCustomPrompt} />}
+        {promptModal && <PromptModal onClose={toggleCustomPrompt} />}
+
+        {!promptModal && promptAlert && (
+          <Alert
+            title='Prompt Updated Successfully'
+            message='RS will now use your custom prompt to generate responses'
+            colorType='success'
+            show={true}
+            handleAlert={() => setPromptAlert(false)}
+          />
+        )}
+
+        {!modal && showAlert && (
+          <Alert
+            title='Files Uploaded Successfully'
+            message='All files have been uploaded successfully'
+            colorType='success'
+            show={true}
+            handleAlert={() => setShowAlert(false)}
+          />
+        )}
 
       </div>
     </div>

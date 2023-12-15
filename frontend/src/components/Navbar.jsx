@@ -12,7 +12,7 @@ function Navbar() {
         setCurrenTheme(localStorage.getItem('theme'))
     }, [nextTheme])
     return (
-        <div className="sticky h-16 top-12 lg:top-0  md:top-0 w-full px-4  justify-between backdrop-blur flex  transition-colors duration-500 lg:z-50 lg:border-b lg:border-slate-900/10 dark:border-slate-50/[0.06] bg-white/60 supports-backdrop-blur:bg-white/95 dark:bg-[#151626] border-b dark:border-purple-500">
+        <div className="sticky h-16 top-12 lg:top-0  md:top-0 w-full px-4  justify-between backdrop-blur flex  transition-colors duration-500 lg:z-50 lg:border-b lg:border-slate-900/10 dark:border-slate-50/[0.06] bg-white/60 supports-backdrop-blur:bg-white/90 dark:bg-[#151626]/60   border-b dark:border-purple-500">
             <div className='flex flex-col  py-4'>
                 <h1 className="text-2xl font-bold dark:text-white">Welcome {userName}!</h1>
             </div>

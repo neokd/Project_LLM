@@ -28,6 +28,7 @@
     "regenerator-runtime": "^0.14.0",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.0",
+    "tailwind-scrollbar": "^3.0.5",
     "uuidv4": "^6.2.13"
   },
   "devDependencies": {

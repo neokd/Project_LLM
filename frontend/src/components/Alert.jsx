@@ -61,16 +61,15 @@ function Alert({ title, message, show, handleAlert, colorType }) {
     return (
         <div
             role="alert"
-            className={`flex w-full max-w-sm dark:bg-slate-900 items-start justify-between rounded-xl p-4 text-slate-800 shadow-xl fixed top-16 right-4  ${show ? 'opacity-100' : 'opacity-0 transition-opacity duration-500'
+            className={`flex w-full max-w-lg  bg-white  dark:bg-slate-900 items-start justify-between rounded-xl p-4 text-slate-800 shadow-xl fixed top-16 right-4 z-99 ${show ? 'opacity-100' : 'opacity-0 transition-opacity duration-500'
                 }`}
         >
             <div className="flex gap-2 sm:gap-4 items-start">
-                <div className={`rounded-full p-2 text-${color[colorType]} text-white my-auto `}>
+                <div className={`rounded-full p-2 text-${color[colorType]} my-auto `}>
                     {getIcon(colorType)}
-
                 </div>
                 <div className={`flex-1  rounded-xl p-4`}>
-                    <strong className={`block text-xl font-medium text-${color[colorType]}`}>{title}</strong>
+                    <strong className={`block text-xl font-medium dark:text-white`}>{title}</strong>
                     <p className="mt-2 dark:text-slate-300 text-lg">{message}</p>
                 </div>
             </div>

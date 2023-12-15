@@ -31,7 +31,7 @@ function Sidebar({ isOpen, onToggle, toggleSourceDocuments, togglePrompt }) {
                             isOpen ? (
                                 <FaCircleXmark size={20} />
                             ) : (
-                                <FaAlignJustify size={20} />
+                                <FaAlignJustify className='dark:text-white text-black' size={20} />
                             )
                         }
                     </button>
@@ -96,7 +96,7 @@ function Sidebar({ isOpen, onToggle, toggleSourceDocuments, togglePrompt }) {
                                 ></div>
 
                                 <div
-                                    className={`absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white transition ${isChecked ? 'translate-x-full' : 'bg-violet-500'
+                                    className={`absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full  transition ${isChecked ? 'translate-x-full bg-white' : 'bg-violet-500'
                                         }`}
                                 ></div>
                             </div>
@@ -116,7 +116,7 @@ function Sidebar({ isOpen, onToggle, toggleSourceDocuments, togglePrompt }) {
             {
                 isOpen ? (
 
-                    <button className={`absolute md:block hidden md:top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-gray-300/70 duration-300 ${isOpen ? 'left-52 lg:left-[16.5rem]' : 'left-2'} `} onClick={onToggle}>
+                    <button className={`absolute md:block hidden md:top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-gray-300/20 hover:bg-gray-300/90 duration-300 ${isOpen ? 'left-52 lg:left-[16.5rem]' : 'left-2'} `} onClick={onToggle}>
 
                         <FaAngleLeft />
                     </button>

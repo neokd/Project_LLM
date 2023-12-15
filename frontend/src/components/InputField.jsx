@@ -121,8 +121,8 @@ function InputField({ inputValue, setInputValue, handleSubmit, onAttachFile }) {
   
 
   return (
-    <div className='rounded-md lg:mx-24'>
-      <div className="flex  gap-x-2 whitespace-nowrap text-xs text-slate-600 dark:text-slate-300 sm:text-sm absolute bottom-24 justify-start items-start">
+    <div className='rounded-md lg:mx-24 '>
+      <div className="flex  gap-x-2 whitespace-nowrap text-xs text-slate-600 dark:text-slate-300 sm:text-sm absolute bottom-24 justify-start items-start ">
         {autoSuggestion.map((item) => (
           <button
             className="rounded-lg bg-slate-900 p-2 hover:bg-[#5741d9] hover:text-slate-200 dark:bg-slate-800 dark:hover:bg-[#5741d9] dark:hover:text-slate-50"
