@@ -23,7 +23,7 @@ from langchain.document_loaders import (
     UnstructuredMarkdownLoader,
     UnstructuredPowerPointLoader,
     UnstructuredTSVLoader,
-    UnstructuredWordDocumentLoader,
+    Docx2txtLoader,
 )
 
 # Define the Chroma settings
@@ -43,8 +43,8 @@ DOCUMENT_MAP = {
     ".xlsx": UnstructuredExcelLoader,
     ".pptx": UnstructuredPowerPointLoader,
     ".ppt": UnstructuredPowerPointLoader,
-    ".docx": UnstructuredWordDocumentLoader,
-    ".doc": UnstructuredWordDocumentLoader,
+    ".docx": Docx2txtLoader,
+    ".doc": Docx2txtLoader,
     ".md": UnstructuredMarkdownLoader,
     ".json": JSONLoader,
 }
