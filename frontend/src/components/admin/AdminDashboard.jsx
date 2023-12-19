@@ -16,13 +16,16 @@ function AdminDashboard() {
 
       {/* Content */}
       <div
-        className={`flex-1 flex flex-col items-center justify-center overflow-hidden transition-all ease-in-out overflow-y-auto ${
-          isSidebarOpen ? "md:ml-64" : "ml-0"
-        }`}
+        className={`flex-1 flex flex-col overflow-hidden transition-all ease-in-out overflow-y-auto ${isSidebarOpen ? "md:ml-64" : "ml-0"
+          }`}
       >
         <Navbar />
-        <div className="container mx-auto lg:w-3/5 w-full h-[95vh]">
-          
+        <div className="h-[95vh] container mx-auto">
+
+          <h1 className="text-3xl font-semibold text-start text-slate-900 dark:text-slate-50">
+            Admin Dashboard
+          </h1>
+
         </div>
       </div>
     </div>

@@ -39,7 +39,7 @@ function Home() {
   const [sourceDocuments, setSourceDocuments] = useState([]);
   const [promptModal, setPromptModal] = useState(false)
   const [promptAlert, setPromptAlert] = useState(false)
-
+  // const []
 
   const navigateTo = useNavigate();
   const verify = localStorage.getItem('user_id');
@@ -100,9 +100,11 @@ function Home() {
 
   const parseSourceDocuments = (parsedData) => {
     try {
+      console.log(parsedData)
       const match = parsedData.match(/"source_documents":\s*(\[[\s\S]*?\])/);
       if (match) {
         const sourceDocumentsJson = match[1];
+        console.log(sourceDocumentsJson)
         const jsonData = JSON.parse(sourceDocumentsJson);
 
         // Append new source documents to the existing state
@@ -322,11 +324,13 @@ function Home() {
     // Move code blocks to the next line
     const codeBlockMoved = message.replace(/\\n(```[^`]+```)/g, '\n\n$1');
 
-    const markdownText = codeBlockMoved.replace(/\\n(\d|[a-zA-Z])|\\n\\n|(\d|[a-zA-Z])\n/g, '\n\n $1 ');
+    const markdownText = codeBlockMoved.replace(/\\n(\d|[a-zA-Z])|\\n|\\n\\n|\|\\n\||(\d|[a-zA-Z])\n/g, '\n\n $1 ');
     // const markdownText = codeBlockMoved.replace(/\\n(\d+\.[^\n]+|[a-zA-Z]\.[^\n]+)/g, '\n$1');
+    const highLightText = markdownText.replace(/([^:]+):/g, '*$1*');
 
-    return markdownText;
-  };
+    return highLightText;
+};
+
 
 
 
@@ -417,7 +421,7 @@ function Home() {
                           </div>
                         </div>
                         {sourceDocuments.length > 0 && showSourceDocuments && (
-                          <div className=" p-4 grid grid-cols-2 rounded-xl gap-x-4">
+                          <div className=" p-4 grid grid-cols-2 rounded-xl gap-4 ">
                             {sourceDocuments.map((document, docIndex) => (
                               index === loadingIndex && (
                                 <div className=" flex flex-col rounded-xl bg-slate-50 px-2 py-6 dark:bg-[#1c1f37] sm:px-4 border-l-2 border-purple-600 shadow-md dark:shadow-slate-700/40" key={docIndex}>

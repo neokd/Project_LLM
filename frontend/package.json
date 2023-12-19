@@ -29,7 +29,7 @@
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.0",
     "tailwind-scrollbar": "^3.0.5",
-    "uuidv4": "^6.2.13"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",

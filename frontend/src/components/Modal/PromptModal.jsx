@@ -52,7 +52,7 @@ function PromptModal({ onClose }) {
           >
             <IoMdClose size={24} />
           </button>
-          <div className="p-6 bg-[#0f162a]/50 dark:bg-slate-950 rounded-md bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-80 w-full max-w-3xl flex flex-col">
+          <div className="p-6 bg-[#0f162a] dark:bg-slate-950 rounded-md bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-80 w-full max-w-3xl flex flex-col">
             <h1 className="text-2xl font-bold text-white">Custom Instructions</h1>
             <hr className="border-t border-gray-300 my-4" />
             <p className=" mb-4 text-gray-200">

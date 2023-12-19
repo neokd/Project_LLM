@@ -46,7 +46,7 @@ import chromadb
 from langchain.embeddings import HuggingFaceEmbeddings
 from queue import Queue
 from sse_starlette.sse import EventSourceResponse
-
+import uuid
 
 app = FastAPI()
 Base = declarative_base()
@@ -66,11 +66,19 @@ db=Chroma(collection_name="central_db", persist_directory=PERSIST_DIRECTORY, emb
 class UserDB(Base):
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=str(uuid.uuid4())) 
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     password = Column(String)
 
+
+class UserChatHistory(Base):
+    __tablename__ = 'chat_history'
+    user_id = Column(String, primary_key=True, index=True, default=str(uuid.uuid4())) 
+    sesssion_id = Column(String, unique=True, index=True, default=str(uuid.uuid4()))
+    chat_id = Column(String, unique=True, index=True, default=str(uuid.uuid4()))
+    message_type = Column(String)
+    message = Column(String)
 
 app.add_middleware(
     CORSMiddleware,
@@ -293,3 +301,13 @@ async def add_prompt(request: CustomPrompt):
     SYSTEM_BEGIN, SYSTEM_END = "[SYS]", "[/SYS]"
     prompt.template = INSTRUCTION_BEGIN + request.prompt + INSTRUCTION_TEMLATE + INSTRUCTION_END
     return {"message": prompt.template, "status": status.HTTP_200_OK}
+
+
+
+
+@app.post("/api/store_chat")
+def add_history(request: dict):
+    print(request)
+    
+
+

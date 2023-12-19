@@ -144,7 +144,7 @@ function InputField({ inputValue, setInputValue, handleSubmit, onAttachFile }) {
               setInputValue(e.target.value);
               handleSearch(e.target.value)
             }}
-            className="block rounded-xl w-full resize-none border-none bg-slate-100 p-4 pl-10 pr-20 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:bg-[#1c1f37] dark:text-slate-200 dark:placeholder-slate-400 dark:focus:ring-blue-600 sm:text-base"
+            className="resize-none block rounded-xl w-full max-h-48 border-none bg-slate-100 p-4 pl-10 pr-20 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:bg-[#1c1f37] dark:text-slate-200 dark:placeholder-slate-400 dark:focus:ring-blue-600 sm:text-base"
             placeholder={transcript || "Enter your prompt"}
             rows="1"
             cols="2"
