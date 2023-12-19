@@ -324,7 +324,7 @@ function Home() {
     // Move code blocks to the next line
     const codeBlockMoved = message.replace(/\\n(```[^`]+```)/g, '\n\n$1');
 
-    const markdownText = codeBlockMoved.replace(/\\n(\d|[a-zA-Z])|\\n|\\n\\n|\|\\n\||(\d|[a-zA-Z])\n/g, '\n\n $1 ');
+    const markdownText = codeBlockMoved.replace(/\\n(\d|[a-zA-Z])|\\n\\n|\|\\n\||(\d|[a-zA-Z])\n/g, '\n\n $1 ');
     // const markdownText = codeBlockMoved.replace(/\\n(\d+\.[^\n]+|[a-zA-Z]\.[^\n]+)/g, '\n$1');
     const highLightText = markdownText.replace(/([^:]+):/g, '*$1*');
 
