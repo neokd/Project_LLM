@@ -15,7 +15,6 @@ from chromadb.config import Settings
 from langchain.document_loaders import (
     CSVLoader,
     JSONLoader,
-    PDFMinerLoader,
     TextLoader,
     UnstructuredEPubLoader,
     UnstructuredExcelLoader,
@@ -24,6 +23,7 @@ from langchain.document_loaders import (
     UnstructuredPowerPointLoader,
     UnstructuredTSVLoader,
     Docx2txtLoader,
+    PDFMinerLoader
 )
 
 # Define the Chroma settings

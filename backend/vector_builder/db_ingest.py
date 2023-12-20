@@ -1,20 +1,25 @@
 import os
 import logging
+from langchain.document_loaders import PyPDFLoader
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from config import DOCUMENT_MAP, INGEST_THREADS
 
 
 class content_loader_class:
     @staticmethod
-    def load_single_document(file_path):
+    def load_single_document(file_paths):
         try:
-            file_extension = os.path.splitext(file_path)[1]
-            loader_class = DOCUMENT_MAP.get(file_extension)
-            if loader_class:
-                loader = loader_class(file_path)
+            file_extension = os.path.splitext(file_paths)[1]
+            if file_extension == ".pdf":
+                loader = PyPDFLoader(file_path=file_paths, extract_images=True)
+                return loader.load()[0]
             else:
-                raise ValueError("Document type is undefined")
-            return loader.load()[0]
+                loader_class = DOCUMENT_MAP.get(file_extension)
+                if loader_class:
+                    loader = loader_class(file_paths)
+                else:
+                    raise ValueError("Document type is undefined")
+                return loader.load()[0]
         except Exception:
             return None
 
@@ -56,8 +61,7 @@ class content_loader_class:
 # if __name__ == "__main__":
 #     loader = content_loader_class()
 #     filepath = [
-#                 "/home/gladwin/Desktop/Project_LLM/backend/source/user2/about2.txt",
-#                 "/home/gladwin/Desktop/Project_LLM/backend/source/user2/history.txt"
+#                 "/home/gladwin/Desktop/backend-3(chroma db)/source/central_db/1706.03762.pdf"
 #             ]
 #     docs = loader.load_documents(filepath)
 #     print("docs : ", docs)

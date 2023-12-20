@@ -12,7 +12,7 @@ from config import (
     SOURCE_DIRECTORY, 
     STRUCTURE_DIRECTORY,
     PERSIST_DIRECTORY,
-    EMBEDDING_MODEL_NAME
+    EMBEDDING_MODEL_NAME,
 )
 
 
@@ -193,7 +193,7 @@ async def upload_user_files(files: List[UploadFile], username:str = Form(...)):
     print(files)
     for file in files:
         contents = await file.read()
-        with open("source/" + str(username) + "/" + file.filename, "wb") as buffer:
+        with open("source/" + "central_db" + "/" + file.filename, "wb") as buffer:
             buffer.write(contents)
             buffer.close()
         
@@ -211,7 +211,7 @@ def chain_factory() -> RetrievalQA:
     try:
         return RetrievalQA.from_chain_type(
             llm,
-            retriever=db.as_retriever(search_kwargs={"k": 2}),
+            retriever=db.as_retriever(search_type="mmr",search_kwargs={"k": 2}),
             chain_type="stuff",
             return_source_documents=True,
             chain_type_kwargs={
@@ -302,6 +302,10 @@ async def add_prompt(request: CustomPrompt):
     prompt.template = INSTRUCTION_BEGIN + request.prompt + INSTRUCTION_TEMLATE + INSTRUCTION_END
     return {"message": prompt.template, "status": status.HTTP_200_OK}
 
+
+# @app.get("/api/admin/models")
+# async def admin_home():
+    # Read the models folder and allow user to select models
 
 
 

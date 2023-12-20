@@ -3,11 +3,16 @@ import chromadb
 from vector_builder.folder_structure import folder_structure_class
 from vector_builder.db_ingest import content_loader_class
 from vector_builder.detect_changes import detect_changes_class
+from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain.vectorstores import Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
-from config import (SOURCE_DIRECTORY,STRUCTURE_DIRECTORY,PERSIST_DIRECTORY,EMBEDDING_MODEL_NAME)
+from huggingface_hub import hf_hub_download
+from langchain.llms.llamacpp import LlamaCpp
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from config import (SOURCE_DIRECTORY,STRUCTURE_DIRECTORY,PERSIST_DIRECTORY,EMBEDDING_MODEL_NAME,DEVICE_TYPE,N_GPU_LAYERS,MODEL_PATH,MODEL_FILE,MODEL_NAME,MAX_NEW_TOKENS)
 
 root_directory = os.path.basename(os.path.normpath(SOURCE_DIRECTORY))
 content_loader_object = content_loader_class()
@@ -64,6 +69,7 @@ def vector_db_new_creation(content_loader_object,subfolders,files_paths):
     for subfolder in subfolders:
         document_contents = content_loader_object.load_documents(files_paths[subfolder])
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        #print(document_contents)
         texts = text_splitter.split_documents(document_contents)
 
         db = Chroma.from_documents(texts, embeddings, collection_name=subfolder, persist_directory=PERSIST_DIRECTORY,  client=client)
@@ -73,7 +79,7 @@ def vector_db_new_creation(content_loader_object,subfolders,files_paths):
         db = None
         print(f"{list(set(files_added))} are in vector DB")
         print("new Vector DB has been created !!!")
-
+    return None
 def vector_db_file_creation(content_loader_object,subfolders,files_paths,count=1):
     client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
@@ -122,8 +128,3 @@ if __name__ == "__main__":
         update_json_structure(folder_structure_object,detect_changes_object)
     else:
         create_json_structure(folder_structure_object,detect_changes_object)
-
-#     db=Chroma(collection_name="user", persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings, client=client)
-#     collection = db.get()
-#     files_added=[metadata['source'] for metadata in collection['metadatas']]
-#     print(f"{list(set(files_added))} are in vector DB")

@@ -1,27 +1,63 @@
-# Project_LLM
+# RS BOT
 
-Steps to run the project:
+An offline based LLM tool for generating responses for network not connected over the internet.
 
-Frontend:
+![RS WireFrame](./wireframe.png)
 
-1. Go to the frontend folder
+Run the Project
+
+Clone the project
+
 ```bash
-cd frontend && npm install
-```
-2. Run the frontend
-```bash
-npm run dev
+git clone https://github.com/neokd/Project_LLM.git
 ```
 
-Backend:
+Go to the project directory
 
-1. Go to the backend folder
 ```bash
-cd backend && pip install -r requirements.txt
+cd Project_LLM
 ```
-2. Run the backend
+
+### Server
+
+```bash
+cd backend
+```
+
+Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+Start the server
+
 ```bash
 uvicorn app:app --reload
 ```
 
+### Client
 
+```bash
+cd frontend
+```
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Start the client
+
+```bash
+npm run dev
+```
+
+## Authors
+- [Kuldeep L](https://www.github.com/neokd)
+- [Priyadharshini P](https://www.github.com/priyamakeshwari)
+- [Karthikeyan K](https://www.github.com/karthi-cmd)
+- [Priyadharshini M](https://github.com/Priyakumar23)
+- [Gladwin I](https://www.github.com/Gladwin001)
+- [Kirupalakshmi G](https://www.github.com/kirupa22)
